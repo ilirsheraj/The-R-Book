@@ -226,5 +226,181 @@ par(mfrow=c(1,1))
 detach(jaws)
 
 # Connecting Observations
+smooth <- read.table("Datasets/smoothing.txt", header = TRUE)
+head(smooth)
+attach(smooth)
+
+plot(x, y, pch=16, col=hue_pal()(2)[1])
+lines(x, y, col=hue_pal()(2)[2])
+
+# Order x from smallest to largest
+plot(x, y, pch=16, col=hue_pal()(2)[1])
+seqs <- order(x)
+lines(x[seqs], y[seqs], col=hue_pal()(2)[2])
+
+plot(x[seqs], y[seqs], pch=16, col=hue_pal()(2)[1], type = "b", cex=1.5, lty = 1)
+detach(smooth)
+
+# Stepped Lines
+x <- 0:10
+y <- 0:10
+plot(x, y, pch = 16, col = hue_pal()(4)[1])
+# Add line connecting all dots
+lines(x, y, col = hue_pal()(4)[2])
+# Accross first -> s
+lines(x, y, col = hue_pal()(4)[3], type = "s")
+# Up First
+lines(x, y, col = hue_pal()(4)[3], type = "S")
+
+# Multiple Lines for each row (patient)
+sleep <- read.table("Datasets/sleep.txt", header = T)
+head(sleep)
+attach(sleep)
+plot(Days, Reaction, pch=16, col=hue_pal()(1))
+
+library(lattice)
+length(unique(sleep$Subject))
+# To join lines: type=c("p", "l")
+xyplot(Reaction ~ Days, groups = Subject, type=c("p", "l"), pch=16, 
+       col=hue_pal()(18)[c(1:18)])
+detach(sleep)
+
+# Adding Shapes
+## Create an empty plot
+plot(0:10, 0:10, xlab = "", ylab = "", xaxt = "n", yaxt = "n", type = "n")
+# Inset a solid rectangle
+rect(6, 6, 9, 9, col = hue_pal()(5)[1])
+# Insert Arrows
+arrows(1, 1, 3, 8, col = hue_pal()(5)[2])
+# Insert double-headed arrow (code=3)
+arrows(1, 9, 5, 9, code = 3, col = hue_pal()(5)[3])
+# Like error bars: angle 90 instead of default 30
+arrows(4, 1, 4, 6, code = 3, angle = 90, col = hue_pal()(5)[4])
+# Add a polygon too
+polygon(c(5, 7, 9, 8, 7, 5), c(4, 4, 2, 0.5, 1, 2), col = hue_pal()(5)[5])
+
+# Adding mathematical Symbols
+# Create a vector
+x <- seq(-4, 4, len = 101)
+plot(x, sin (x), type = "l", xaxt = "n", col = hue_pal()(1), 
+     xlab = expression(paste("Phase Angle ", phi)),
+     ylab = expression("sin " * phi))
+# define xticks
+axis(1, at = c(-pi, -pi/2, 0, pi/2, pi), 
+     lab = expression(-pi, -pi/2, 0, pi/2, pi))
+# Add mathematical expressions inside the plot
+text(-pi/2, 0.5, substitute(chi^2 == "24.5"))
+# Add lattex type-expression
+text(pi/2, -0.5, 
+     expression(paste(frac(1, sigma * sqrt(2*pi)), " ", 
+                      e^{frac (-(x - mu)^2, 2*sigma^2)})))
+text(pi/2, 0, expression(hat(y) %+-% se))
+cd <- 0.63
+text(-pi/2, 0, substitute(r^2 == cd, list (cd = cd)))
+################################################################################
+# ggplot2 -> The real thing :)
+library(ggplot2)
+daph <- read.table("Datasets/daphnia.txt", header = T)
+head(daph)
+# Way easier with pipe (%>%) operator, but let me stick to the book
+## default histogram
+ggplot(daph, aes(x = Growth.rate)) + geom_histogram ()
+
+## COlor histogram
+ggplot(daph, aes(x = Growth.rate)) + geom_histogram(fill = hue_pal()(1))
+
+## Histogram showing water type: global color
+ggplot(daph, aes(x = Growth.rate, fill = Water)) + geom_histogram()
+
+# Facet by water type, one per each
+ggplot(daph, aes(x = Growth.rate)) + geom_histogram (fill = hue_pal()(1)) +
+  facet_grid (Water ~ .)
+
+# Boxplots
+ggplot(daph, aes(x = Detergent, y = Growth.rate)) + geom_boxplot()
+
+ggplot(daph, aes(x = Water, y = Growth.rate, fill = Detergent)) + 
+  geom_boxplot()
+
+ggplot(daph, aes(x = Water, y = Growth.rate, fill = Water)) + 
+  geom_boxplot()
+
+# Flip it
+ggplot(daph, aes(x = Water, y = Growth.rate, fill = Water)) + 
+  geom_boxplot() + coord_flip()
+
+# SHow dots and avoid cluttering with jitter
+ggplot(daph, aes(x = Water, y = Growth.rate, fill = Water)) + 
+  geom_boxplot() +
+  geom_jitter(shape=16, position = position_jitter(0.2))
+
+fertilizer_data <- read.table("Datasets/fertilizer.txt", header = T)
+head(fertilizer_data)
+fertilizer_data$week <- as.factor(fertilizer_data$week)
+
+ggplot(fertilizer_data, aes(week, root)) + geom_point()
+
+# Color by Plant
+ggplot(fertilizer_data, aes(week, root, color = plant)) + 
+  geom_point()
+
+# Lines by plant
+ggplot(fertilizer_data, aes(week, root, group = plant)) + 
+  geom_line(aes(colour = plant), size=1)
+
+# Add points too
+ggplot(fertilizer_data, aes(week, root, group = plant)) + 
+  geom_line(aes(colour = plant), size=1) +
+  geom_point(aes(color=plant), size=2)
+
+# Add Regression for each
+ggplot(fertilizer_data, aes(week, root, color=plant, group = plant)) + 
+  geom_point() +
+  geom_smooth(method = "lm", se=FALSE)
+################################################################################
+# Graphics Cheat Sheet
+## Current Plotting Region
+par("usr")
+par("usr")[1]
+
+# Save the default plotting parameters
+default.parameters <- par(no.readonly = TRUE)
+
+# Current margins parameters
+par ("mar")
+
+# Text justification
+par(adj = 0)
+
+plot(1:10, 10:1, type = "n", axes = FALSE, xlab = "", ylab = "")
+axis(1, 1:10, LETTERS[1:10], col.axis = hue_pal()(3)[1])
+axis(2, 1:10, letters[10:1], col.axis = hue_pal()(3)[2])
+axis(3, lwd = 3, col.axis = hue_pal()(3)[3])
+axis(4, at = c (2, 5, 8), labels = c ("one", "two", "three"))
+
+# Background colors for plots
+par(bg = "cornsilk")
+
+# Boxes around plots
+plot(1 : 10, 10 : 1, type = "n")
+plot(1 : 10, 10 : 1, type = "n", bty = "n")
+plot(1 : 10, 10 : 1, type = "n", bty = "]")
+plot(1 : 10, 10 : 1, type = "n", bty = "c")
+plot(1 : 10, 10 : 1, type = "n", bty = "u")
+plot(1 : 10, 10 : 1, type = "n", bty = "7")
+
+# Change background to default
+par(bg = "white")
+
+# Cex for bubbles of different sizes
+plot(0:10, 0:10, type = "n", xlab = "", ylab = "")
+for(i in 1:10) points (2, i, cex = i, col = hue_pal()(10)[i])
+for(i in 1:10) points (6, i, cex = (10 + (2 * i)), col = hue_pal()(10)[i])
+
+# Change the shape of plotting region
+par(plt = c(0.15, 0.95, 0.3, 0.7))
+plot(c(0, 3000), c(0, 1500), type = "n", ylab = "y", xlab = "x")
 
 
+# Reset at the end
+par(default.parameters)
