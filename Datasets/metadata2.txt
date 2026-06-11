@@ -1,0 +1,7 @@
+  study successT failureT  nT successC failureC  nC
+      A       12       53  65       16       49  65
+      B        8       32  40       10       30  40
+      C       14       66  80       19       61  80
+      D       25      375 400       80      320 400
+      E        8       32  40       11       29  40
+      F       16       49  65       18       47  65
