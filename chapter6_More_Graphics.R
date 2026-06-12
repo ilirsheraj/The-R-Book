@@ -401,6 +401,224 @@ for(i in 1:10) points (6, i, cex = (10 + (2 * i)), col = hue_pal()(10)[i])
 par(plt = c(0.15, 0.95, 0.3, 0.7))
 plot(c(0, 3000), c(0, 1500), type = "n", ylab = "y", xlab = "x")
 
+# fig for multiple plots in one figure
+par(fig =c(0.5, 1, 0.5, 1))
+plot(0:10, 25 * exp (-0.1 * (0:10)), col = hue_pal()(2)[1], 
+     type = "l", xlab = "x", ylab = "y")
+par(fig =c(0, 0.5, 0, 0.5), new = T)
+plot(0:100, 0.5 *(0:100)^0.5, col = hue_pal()(2)[2],
+     type = "l", xlab = "x", ylab = "y")
+
+# Common x, different y-scale
+gales <- read.table("Datasets/gales.txt", header = T)
+head(gales)
+attach(gales)
+
+par(fig = c(0, 1, 0.5, 1))
+par(mar = c(0, 5, 2, 2))
+plot(year, number, xlab = "", xaxt = "n", type = "b", pch = 16,
+     col=hue_pal()(2)[1], ylim=c(0, 2000), ylab = "Population")
+
+par(fig = c(0, 1, 0, 0.5), new = T)
+par(mar = c(5, 5, 0, 2))
+plot(year, February, xlab = "Year", type = "h", 
+     col = hue_pal()(2)[2], ylab = "February gales")
+detach(gales)
+
+# The Layout
+x <- pmin(3, pmax(-3, rnorm (50)))
+y <- pmin(3, pmax(-3, rnorm (50)))
+xhist <- hist(x, breaks = seq (-3, 3, 0.5), plot = FALSE)
+yhist <- hist(y, breaks = seq (-3, 3, 0.5), plot = FALSE)
+top <- max(c(xhist$counts, yhist$counts))
+xrange <- c(-3, 3)
+yrange <- c(-3, 3)
+
+# Define the layout
+matrix(c(2, 0, 1, 3), 2, 2, byrow = TRUE)
+nf <- layout(matrix(c(2, 0, 1, 3), 2, 2, byrow = TRUE), c(3, 1), c(1, 3), TRUE)
+layout.show(nf)
+
+# Now plot the thing
+par(mar = c(3, 3, 1, 1))
+plot(x, y, xlim = xrange, ylim = yrange, pch = 16, 
+     col = hue_pal()(2)[1], xlab = "", ylab = "")
+par(mar = c (0, 3, 1, 1))
+barplot(xhist$counts, axes = FALSE, col = hue_pal()(2)[2],
+        ylim = c (0, top), space = 0)
+par(mar = c(3, 0, 1, 1))
+barplot(yhist$counts, axes = FALSE, col = hue_pal()(2)[2],
+        xlim = c (0, top), space = 0, horiz = TRUE)
+
+# Multiple Screens
+# each row describes a screen with values for the left, right, bottom, 
+# and top of the screen (in that order)
+head(gales)
+attach(gales)
+
+# Define the matrix for figures
+close.screen(all.screens = TRUE)
+fig.mat <- c (0, 0, .5, .5, 1, .5, 1, 1, .7, 0, .35, 0, 1, .7, .7, .35)
+fig.mat <- matrix(fig.mat, nrow = 4)
+fig.mat
+screens <- split.screen(fig.mat)
+
+# This needs to be fixed for code to work, not like the book
+screen(screens[1])
+plot(year, number, type = "l", col = hue_pal()(3)[1])
+
+screen(screens[2])
+plot(year, February, type = "h", col = hue_pal()(3)[2])
+
+screen(screens[3])
+plot(1:10, 0.5 * (1:10)^0.5, xlab = "concentration", ylab = "rate",
+     type = "l", col = hue_pal()(3)[3])
+
+screen(screens[4])
+plot(1:10, 600*exp(-0.5 * (1 : 10)), xlab ="time", ylab = "residue", 
+     type = "l", col = hue_pal()(3)[3])
+close.screen(all.screens = TRUE)
+detach(gales)
+
+# Number on ticks
+plot(0:10, 0:10, type = "n", xlab = "", ylab = "")
+lines(c(2, 5, 8), c(8, 2, 8), col = hue_pal()(3)[1], lwd = 50,
+      lend = "square", ljoin="mitre")
+lines(c(2, 5, 8), c(8, 2, 8), col = hue_pal()(3)[2], lwd = 50,
+      lend = "round", ljoin = "round")
+lines(c(2, 5, 8), c(8, 2, 8), col = hue_pal()(3)[3], lwd = 50,
+      lend = "butt", ljoin = "bevel")
+
+x <- numeric(100)
+y <- numeric(100)
+x[1] <- 1
+y[1] <- 1
+for (i in 2:100) {
+  a <- runif (1) * 2 * pi
+  d <- runif (1) * 1
+  x[i] <- x[i-1] + d * sin (a)
+  y[i] <- y[i-1] + d * cos (a)
+}
+
+plot(0:10, 0:10, type = "n", xaxt = "n", yaxt = "n", xlab = "", ylab = "")
+lines(x, y, lwd = 13, lend = "round", ljoin = "round")
+lines(x, y, lwd = 10, col = hue_pal()(1), lend = "round", ljoin = "round")
+
+# Controlling Line Width
+plot(1:10, 1:10, xlim = c(0, 10), ylim = c(0, 10),
+     xlab = "", ylab = "", type = "n")
+for(i in 1 : 7) {
+  abline ((-6 + 2 * i), 1, lty = i, col = hue_pal()(7)[i])
+  }
+for (i in 2:7) {
+  y <- (-6 + 2 * i) + 2
+  x <- 2
+  text (x, y, i)
+}
+abline(-6, 1, lty = 1, lwd = 4)
+abline(-8, 1, lty = 1, lwd = 8)
+points(5, 1, pch = 16, cex = 3, col = "white")
+points(7, 1, pch = 16, cex = 3, col = "white")
+points(9, 1, pch = 16, cex = 3, col = "white")
+text(5, 1, 1)
+text(7, 1, 4)
+text(9, 1, 8)
+
+# Control the Margins
+# bottom, left, top, right. The default is
+par(mar =(c(5, 4, 4, 2) + 0.1))
+
+# Change it
+par(mar = (c(5, 4, 4, 4) + 0.1))
+
+# No margins for labels
+par(mar =(c(0, 0, 0, 0)))
+
+# Reset
+par(mar =(c(5, 4, 4, 2) + 0.1))
+
+# More than one graph on same axes
+head(gales)
+attach(gales)
+
+# Make wider right margin
+par(mar = c(5, 4, 4, 4) + 0.1)
+plot(year, number, type = "l", lwd = 2, las = 1, col = hue_pal()(2)[1])
+par(new = T)
+plot(year, February, type = "h", axes = F, ylab = "",
+     lty = 2, col = hue_pal()(2)[2])
+axis(4, las = 1)
+mtext(side = 4, line = 2.5, "February gales")
+detach(gales)
+
+# Outer margins (oma)
+## Default: oma = c(0, 0, 0, 0)
+par(oma = c(5, 5, 0, 0))
+data("anscombe")
+attach(anscombe)
+par(mfrow = c (2, 2))
+plot(x1, y1, col = hue_pal()(2)[1], pch = 16, xlim = c (0,20), 
+     ylim = c (0, 16), main = "Set 1")
+abline(lm (y1 ~ x1), col = hue_pal()(2)[2])
+
+plot(x2, y2, col = hue_pal()(2)[1], pch = 16, xlim = c (0,20), 
+     ylim = c (0, 16), main = "Set 2")
+abline(lm (y2 ~ x2), col = hue_pal()(2)[2])
+
+plot(x3, y3, col = hue_pal()(2)[1], pch = 16, xlim = c (0,20), 
+     ylim = c (0, 16), main = "Set 3")
+abline(lm (y3 ~ x3), col = hue_pal()(2)[2])
+
+plot(x4, y4, col = hue_pal()(2)[1], pch = 16, xlim = c (0,20), 
+     ylim = c (0, 16), main = "Set 4")
+abline(lm (y4 ~ x4), col = hue_pal()(2)[2])
+
+par(mfrow = c(2, 2), oma = c(0, 0, 2, 0))
+mtext("Anscombe’s 4 regression data sets", outer = TRUE, cex = 1.5)
+detach(anscombe)
+
+# reset
+par(oma = c(0, 0, 0, 0))
+
+# Packing graphs closer together
+par(mfrow = c (3, 3))
+par(mar = c (0.2, 0.2, 0.2, 0.2))
+par(oma = c (5, 5, 0, 0))
+for (i in 1:9) {
+  plot(sort(runif(100)), sort(runif (100)), xaxt = "n", yaxt = "n", 
+       pch = 16, col = hue_pal()(1))
+  title(xlab = "time", ylab = "distance", outer = T, cex.lab = 2)
+  }
+
+# Rotating the Characters
+par(mfrow = c (1, 1))
+par(oma = c(0, 0, 0, 0))
+plot(1:10, 1:10, type = "n", xlab = "", ylab = "")
+for(i in 1:10) text (i, i, LETTERS[i], srt = (20 * i), col = hue_pal()(2)[1])
+for (i in 1:10) text (10 - i + 1, i, letters[i], srt = (20 * i), col = hue_pal()(2)[2])
+
+# Rotating axis labels
+spending <- read.csv("Datasets/spending.csv", header = TRUE)
+head(spending)
+attach(spending)
+
+par(mar = c(7, 4, 4, 2) + 0.1)
+xvals <- barplot(spend, ylab = "spending", col = hue_pal()(1))
+text(xvals, par ("usr")[3] - 0.25, srt = 45, adj = 1, labels = country, xpd = TRUE)
+detach(spending)
+
+# Tick marks on the axes
+## Normal
+plot(1 : 10, 1 : 10, xlab = "", ylab = "", type = "n")
+
+# With grid
+plot(1 : 10, 1 : 10, xlab = "", ylab = "", type = "n", tck = 1)
+
+# No ticks visible
+plot(1 : 10, 1 : 10, xlab = "", ylab = "", type = "n", tck = 0)
+
+# Adjust tick sizes
+plot(1 : 10, 1 : 10, xlab = "", ylab = "", type = "n", tck = 0.03)
 
 # Reset at the end
 par(default.parameters)
