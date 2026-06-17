@@ -1,4 +1,5 @@
 # Plotting with Base R
+library(scales)
 scatter <- read.table("Datasets/scatter1.txt", header = T)
 head(scatter)
 
