@@ -199,14 +199,181 @@ summary(quine_mod6)
 plot(quine_mod6, which = 1, col = hue_pal()(1), pch=16)
 ################################################################################
 # Count Table Data and GLMs
+pdf(paste0(plot_dir, "MosaicPlot.pdf"), width = 9, height = 8)
+mosaicplot(HairEyeColor, shade = TRUE, type = "deviance")
+dev.off()
 
+# Suppose we are carrying out a study of induced defences in trees
+induced <- read.table("Datasets/induced.txt", header = TRUE,
+                      colClasses = c(rep("factor", 3), "numeric"))
+head(induced)
+sapply(induced, class)
 
+# Begin with a saturated model
+induced_mod1 <- glm(Count ~ Tree * Aphid * Caterpillar, family = poisson,
+                    data = induced)
+summary(induced_mod1)
 
+# Remove the three-way interaction and compare
+induced_mod2 <- update(induced_mod1, ~ . - Tree:Aphid:Caterpillar)
+summary(induced_mod2)
 
+# Compare the two nested models
+anova(induced_mod1, induced_mod2, test= "Chi")
 
+# Remove Aphid:Caterpillar interaction
+induced_mod3 <- update(induced_mod2, ~ . - Aphid:Caterpillar)
+summary(induced_mod3)
 
+# Again compare the last two models
+anova(induced_mod2, induced_mod3, test= "Chi")
+# No interaction between Aphid and caterpillar!
 
+# Wrong start screws up everything: exclude trees
+induced_mod1a <- glm(Count ~ Aphid * Caterpillar, family = poisson, 
+                     data = induced)
+summary(induced_mod1a)
 
+# Then remove the interaction
+induced_mod2a <- update(induced_mod1a, ~ . - Aphid:Caterpillar)
+summary(induced_mod2a)
 
+anova(induced_mod1a, induced_mod2a, test = "Chi")
 
+# Why the difference: Tree effect
+as.table(by(induced$Count, INDICES = list(induced$Tree, induced$Caterpillar),
+            FUN = sum))
+
+# Another more complicated case
+lizards <- read.table("Datasets/lizards.txt",header = TRUE,
+                      colClasses = c ("numeric", rep ("factor", 5)))
+head(lizards)
+# But them all in a summary table
+tapply(lizards$n, list(lizards$species, lizards$sun, lizards$height,
+                       lizards$perch, lizards$time), sum)
+
+# Flatten the table
+ftable(tapply(lizards$n, list(lizards$species, lizards$sun, lizards$height,
+                              lizards$perch, lizards$time), sum))
+# Start with saturated model
+lizards_mod1 <- glm(n ~ sun * height * perch * time * species, poisson,
+                    data = lizards)
+summary(lizards_mod1)
+# par(mfrow=c(2,2))
+# plot(lizards_mod1)
+par(mfrow=c(1,1))
+lizards_mod1$aic
+
+# Use the simples model without interactions
+lizards_mod2 <- glm(n ~ sun + height + perch + time + species, poisson,
+                    data = lizards)
+summary(lizards_mod2)
+
+lizards_mod2$aic
+# Missing a lot
+
+# Introduce interactions of all variables with species
+lizards_mod3 <- glm(n ~ (sun + height + perch + time) * species, poisson,
+                    data = lizards)
+summary(lizards_mod3)
+
+# AIC in between the simpest and the saturated
+lizards_mod3$aic
+
+# Since it is nested we can now compare to model 1
+anova(lizards_mod3, lizards_mod1, test = "Chi")
+
+# Start removing interactions of 4 or more variables
+lizards_mod4 <- update(lizards_mod1, ~ . - sun:height:perch:time:species -
+                         height:perch:time:species -
+                         sun:perch:time:species -
+                         sun:height:time:species -
+                         sun:height:perch:species -
+                         sun:height:perch:time)
+summary(lizards_mod4)
+lizards_mod4$aic
+
+# Better than 1, but still problematic
+plot(lizards_mod4)
+
+anova (lizards_mod4, lizards_mod1, test = "Chi")
+
+# Add interactions only with species
+lizards_mod5 <- glm(n ~ (sun * height + perch * time + sun * perch +
+                        sun * time + height * perch + height * time) * species,
+                    poisson, data = lizards)
+
+summary(lizards_mod5)
+# More improvement
+lizards_mod5$aic
+anova(lizards_mod5, lizards_mod4, test = "Chi")
+
+# Further reduction with stepwise between model 3 and model 5
+# To avoid printing the output use trace=0
+lizards_mod6 <- step(lizards_mod5, lower = lizards_mod3, upper = lizards_mod5,
+                     trace = 0)
+
+summary(lizards_mod6)
+lizards_mod6$aic
+
+anova(lizards_mod6, lizards_mod5, test = "Chi")
+
+# Quite an improvement between 3 and 6
+anova(lizards_mod6, lizards_mod3, test = "Chi")
+
+# Plot the residuals for 6
+pdf(paste0(plot_dir, "Lizards_final_Model.pdf"), width = 9, height = 8)
+par(mfrow=c(2,2))
+plot(lizards_mod6)
+dev.off()
+
+# Combine morning and afternoon
+levels(lizards$time)
+levels(lizards$time)[c(1, 3)] <- "Not.mid.day"
+
+lizards_mod5a <- glm(n ~ (sun * height + perch * time + sun * perch +
+                      sun * time + height * perch + height * time) * species,
+                     poisson, data = lizards)
+summary(lizards_mod5a)
+
+lizards_mod6a <- step(lizards_mod5, lower = lizards_mod3, upper = lizards_mod5a,
+                      trace = 0)
+summary(lizards_mod6a)
+# Overdispersion! Residual deviance:  51.699  on 27
+
+# One more case with few datapoints
+spino <- read.table("Datasets/spino.txt", header = TRUE, 
+                    colClasses = rep("factor", 2))
+head(spino)
+
+spino$condition <- factor(spino$condition, 
+                          c("much.worse", "worse", "no.change","better", "much.better"))
+spino$treatment <- factor(spino$treatment, c("placebo", "drug.A", "drug.B"))
+
+# Similar to stacked barplot
+spineplot(condition ~ treatment, data = spino, col = hue_pal()(5))
+
+# Check the number of cases
+table(spino$condition, spino$treatment)
+
+# Convert it into a table
+spino_df <- as.data.frame.table(table(spino$condition, spino$treatment))
+head(spino_df)
+# Rename them
+colnames(spino_df) <- c("condition", "treatment", "count")
+spino_df
+
+# Now we can model it: Very low dataset for interactions
+## First with saturated model
+spino_mod1 <- glm(count ~ condition * treatment, poisson, data = spino_df)
+summary(spino_mod1)
+# plot(spino_mod1)
+
+# Simple Model
+spino_mod2 <- glm(count ~ condition + treatment, poisson, data = spino_df)
+summary(spino_mod2)
+plot(spino_mod2)
+
+anova(spino_mod1, spino_mod2, test = "Chi")
+################################################################################
 
