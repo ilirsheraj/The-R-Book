@@ -376,4 +376,102 @@ plot(spino_mod2)
 
 anova(spino_mod1, spino_mod2, test = "Chi")
 ################################################################################
+# Proportion Data and GLM
+x <- seq(-60, 60, 0.1)
+a <- 1
+b <- 0.1
+p <- exp(a + b * x) / (1 + exp (a + b * x))
+par(mfrow=c(1,2))
+plot(x, p, xlab = "x", ylab = "p", type = "l", col = hue_pal ()(2)[1],
+     main = "Linear")
+plot(x, log (p / (1 - p)), xlab = "x", ylab = "logit = log (p / q)",
+     type = "l", col = hue_pal ()(2)[2],
+     main = "Logit")
+par(mfrow=c(1,1))
 
+# Logistic Regression with Binomial Errors
+sexratio <- read.table("Datasets/sexratio.txt", header = TRUE)
+sexratio
+
+# Get the probability of males (p)
+pdf(paste0(plot_dir, "Insect_Sex.pdf"), width = 8, height = 4)
+par(mfrow=c(1,2))
+p <- sexratio$males / (sexratio$males + sexratio$females)
+plot(sexratio$density, p, ylab = "proportion male", xlab = "density",
+     pch = 19, col = hue_pal()(2)[1])
+plot(log(sexratio$density), p, ylab = "proportion male",
+     xlab = "log (denisty)", pch = 16, col = hue_pal()(2)[2])
+dev.off()
+
+# Fit in a model
+y <- cbind(sexratio$males, sexratio$females)
+sex_mod1 <- glm(y ~ density, binomial, data = sexratio)
+summary(sex_mod1)
+# Overdispersion: residual deviance = 22.09, degrees of freedom = 6
+plot(sex_mod1)
+
+# See how it fits
+xv <- seq(0, 400, 0.01)
+xv <- data.frame(density = xv)
+yv <- predict(sex_mod1, newdata = xv, type = "response")
+plot(sexratio$density, p, ylab = "Proportion male", 
+     xlab = "log (density)", col = hue_pal()(2)[1], pch = 16)
+lines(xv$density, yv, col = hue_pal()(2)[2])
+
+# Log-transform the covarite
+sex_mod2 <- glm(y ~ log(density), binomial, data = sexratio)
+summary(sex_mod2)
+# No overdispersion
+plot(sex_mod2)
+
+# Fit the model
+xv <- seq(0, 6, 0.01)
+ev <- data.frame(density = exp(xv))
+yv <- predict(sex_mod2, newdata = ev, type = "response")
+pdf(paste0(plot_dir, "Fitted_Model_2.pdf"), width = 6, height = 4)
+plot(log(sexratio$density), p, ylab = "Proportion male", 
+     xlab = "log (density)", col = hue_pal()(2)[1], pch = 16)
+lines(xv, yv, col = hue_pal()(2)[2])
+dev.off()
+
+# Predicting x from y
+bioassay <- read.table("Datasets/bioassay.txt", header = TRUE)
+bioassay
+
+# Convert the response in probability of death
+y <- cbind(bioassay$dead, bioassay$batch - bioassay$dead)
+
+bioassay_mod1 <- glm(y ~ dose, binomial, data = bioassay)
+summary(bioassay_mod1)
+
+xv <- seq(0, 100, 1)
+ev <- data.frame(dose = xv)
+yv <- predict(bioassay_mod1, newdata = ev, type = "response")
+p <- bioassay$dead / bioassay$batch
+plot(bioassay$dose, p, pch = 16,
+     col = hue_pal()(2)[1],
+     xlab = "log(dose)",
+     ylab = "Proportion dead")
+lines(xv, yv, lwd = 2, col = hue_pal()(2)[2])
+
+bioassay_mod2 <- glm(y ~ log(dose), binomial, data = bioassay)
+summary(bioassay_mod2)
+# Improvement
+
+# Still the model is not that good
+xv <- seq(0, 5, 0.01)
+ev <- data.frame(dose = exp(xv))
+yv <- predict(bioassay_mod2, newdata = ev, type = "response")
+p <- bioassay$dead / bioassay$batch
+plot(log(bioassay$dose), p, pch = 16,
+     col = hue_pal()(2)[1],
+     xlab = "log(dose)",
+     ylab = "Proportion dead")
+lines(xv, yv, lwd = 2, col = hue_pal()(2)[2])
+
+
+# Predict doses to kill 50, 90 and 95% of insects
+dose_pred <- dose.p(bioassay_mod2, p = c (0.5,0.9,0.95))
+dose_df <- as.data.frame(dose_pred)
+dose_df$dose <- exp(dose_df$x)
+dose_df
