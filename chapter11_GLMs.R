@@ -448,11 +448,13 @@ xv <- seq(0, 100, 1)
 ev <- data.frame(dose = xv)
 yv <- predict(bioassay_mod1, newdata = ev, type = "response")
 p <- bioassay$dead / bioassay$batch
+pdf(paste0(plot_dir, "Bioassay.pdf"), width = 6, height = 4)
 plot(bioassay$dose, p, pch = 16,
      col = hue_pal()(2)[1],
      xlab = "log(dose)",
      ylab = "Proportion dead")
 lines(xv, yv, lwd = 2, col = hue_pal()(2)[2])
+dev.off()
 
 bioassay_mod2 <- glm(y ~ log(dose), binomial, data = bioassay)
 summary(bioassay_mod2)
@@ -463,15 +465,398 @@ xv <- seq(0, 5, 0.01)
 ev <- data.frame(dose = exp(xv))
 yv <- predict(bioassay_mod2, newdata = ev, type = "response")
 p <- bioassay$dead / bioassay$batch
+pdf(paste0(plot_dir, "Bioassay_2.pdf"), width = 6, height = 4)
 plot(log(bioassay$dose), p, pch = 16,
      col = hue_pal()(2)[1],
      xlab = "log(dose)",
      ylab = "Proportion dead")
 lines(xv, yv, lwd = 2, col = hue_pal()(2)[2])
-
+dev.off()
 
 # Predict doses to kill 50, 90 and 95% of insects
 dose_pred <- dose.p(bioassay_mod2, p = c (0.5,0.9,0.95))
 dose_df <- as.data.frame(dose_pred)
 dose_df$dose <- exp(dose_df$x)
 dose_df
+
+# Proportion data with categorical explanatory variables
+## germination of seeds of two genotypes of the parasitic plant Orobanche and 
+# two extracts from host plants (bean and cucumber) that were used to stimulate
+# germination. Count = # germinated out of Sample
+germination <- read.table("Datasets/germination.txt", header = TRUE,
+                colClasses = c(rep("numeric", 2), rep("factor", 2)))
+head(germination)
+table(germination$extract)
+
+tapply(germination$count, list(germination$Orobanche, germination$extract), sum)
+tapply(germination$sample, list(germination$Orobanche, germination$extract), sum)
+
+# There is no interaction between Genotype and Plant extract in germination
+y <- cbind(germination$count, germination$sample - germination$count)
+head(y)
+
+germ_mod1 <- glm(y ~ Orobanche * extract, binomial, data = germination)
+summary(germ_mod1)
+# Overdispersion: ~ 2
+
+# Use quasi-binomial
+germ_mod2 <- glm(y ~ Orobanche * extract, quasibinomial, data = germination)
+summary(germ_mod2)
+
+# And now we remove the itneraction term
+germ_mod3 <- update(germ_mod2, ~ . - Orobanche:extract)
+summary(germ_mod3)
+
+anova(germ_mod3, germ_mod2, test = "F")
+
+# Use ANOVA once again on model 3
+anova(germ_mod3, test = "F")
+
+# Remove genotype too
+germ_mod4 <- update(germ_mod3, ~ . - Orobanche)
+summary(germ_mod4)
+
+anova(germ_mod4, germ_mod3, test = "F")
+
+# Convert values from logit to coefficients
+tapply(predict(germ_mod4, type="response"), germination$extract, mean)
+
+# Check the means of proportions from raw data
+p <- germination$count / germination$sample
+tapply(p, germination$extract, mean)
+
+# Compare to this
+tapply(germination$count, germination$extract, sum)
+tapply(germination$sample, germination$extract, sum)
+
+# Get the ratios
+as.vector(tapply(germination$count, germination$extract, sum))/
+  as.vector(tapply(germination$sample, germination$extract, sum))
+
+# Binomial GLM with Ordered Categorical Covariates
+## Covariates are ordinal, their order has meaning like scale 1-5
+data("esoph")
+head(esoph)
+sapply(esoph, class)
+y <- cbind(esoph$ncases, esoph$ncontrols)
+
+# Start with a simple model, assume no interactions
+esoph_mod1 <- glm(y ~ agegp + alcgp + tobgp, binomial, data = esoph)
+summary(esoph_mod1)
+
+# Check for interaction between alcohol and tobacco
+esoph_mod2 <- glm(y ~ agegp + alcgp * tobgp, binomial, data = esoph)
+summary(esoph_mod2)
+
+# Check using ANOVA: HO-> Omit deleted variables without losing anything
+anova(esoph_mod1, esoph_mod2, test = "Chisq")
+
+# Plot each covariate separately
+p <- esoph$ncases / (esoph$ncases + esoph$ncontrols)
+pdf(paste0(plot_dir, "Esophahgus.pdf"), width = 10, height = 5)
+par(mfrow=c(1,3))
+plot(p ~ alcgp, col = hue_pal()(3)[1], data = esoph, xlab = "",
+     cex.lab = 1.5, cex.axis = 1, las=2)
+plot(p ~ tobgp, col = hue_pal()(3)[2], data = esoph, xlab = "",
+     cex.lab = 1.5, cex.axis = 1, las=2)
+plot(p ~ agegp, col = hue_pal()(3)[3], data = esoph, xlab = "",
+     cex.lab = 1.5, cex.axis = 1, las=2)
+dev.off()
+
+# Reduce the number of groups in covariates
+## Alcohol: 40-79 and 80-119 -> 40-119
+esoph$alcgp2 <- esoph$alcgp
+levels(esoph$alcgp2)[2:3] <- "40-119"
+levels(esoph$alcgp2)
+
+## Tobacco: 10-19 & 20-29 -> 10-29
+esoph$tobgp2 <- esoph$tobgp
+levels(esoph$tobgp2)[2:3] <- "10-30"
+levels(esoph$tobgp2)
+
+## Age Groups: 25-34 & 35-44 -> under 45
+## 45-54 -> same
+## 55-64 - end -> 55+
+esoph$agegp2 <- esoph$agegp
+levels(esoph$agegp2)[4:6] <- "55+"
+levels(esoph$agegp2)[1:2] <- "under45"
+levels(esoph$agegp2)
+
+# Fit new model
+esoph_mod3 <- glm(y ~ agegp2 + alcgp2 + tobgp2, binomial, data = esoph)
+summary(esoph_mod3)
+
+# Remove the orders
+esoph$alcgp3 <- factor(esoph$alcgp, ordered = FALSE)
+esoph$agegp3 <- factor(esoph$agegp2, ordered = FALSE)
+esoph$tobgp3 <- factor(esoph$tobgp2, ordered = FALSE)
+
+esoph_mod4 <- glm(y ~ agegp3 + alcgp3 + tobgp3, binomial, data = esoph)
+summary(esoph_mod4)
+
+# Binomial GLM with categorical and continuous covariates
+flowering <- read.table("Datasets/flowering.txt", header = TRUE,
+                        colClasses = list(variety = "factor"))
+head(flowering)
+
+# Plot
+## flower - non-flower groups
+y <- cbind(flowering$flowered, flowering$number - flowering$flowered)
+head(y)
+
+# Probability of flowered
+pf <- flowering$flowered / flowering$number
+pdf(paste0(plot_dir, "Flowering_Plants.pdf"), width = 6, height = 4)
+plot(flowering$dose, jitter(pf), xlab = "dose", ylab = "proportion flowered",
+     col = hue_pal()(5)[as.vector(as.numeric(factor(flowering$variety)))],
+     pch=16)
+legend(1, 1, legend = levels(flowering$variety),
+       pch = rep(19, 5), title = "variety",
+       col = hue_pal()(5))
+dev.off()
+
+# Maximal Model with interaction
+flow_mod1 <- glm(y ~ dose * variety, binomial, data = flowering)
+summary(flow_mod1)
+# Overdispersion: ~2.5
+
+# Plot to see the fit
+pdf(paste0(plot_dir, "Flowering_Plants_Model1.pdf"), width = 6, height = 4)
+plot(flowering$dose, jitter(pf), xlab = "dose", ylab = "proportion flowered",
+      col = hue_pal()(5)[as.vector(as.numeric(factor(flowering$variety)))],
+     pch=19)
+legend(1, 1, legend = levels (flowering$variety), pch = rep (19, 5), 
+       title = "variety", col = hue_pal()(5))
+
+xv <- seq(0, 35, 0.1)
+for (i in 1:5) {
+  vn <- rep(levels(flowering$variety)[i],length(xv))
+  yv <- predict(flow_mod1, list(variety = factor(vn), dose = xv),
+                type = "response")
+  lines (xv, yv, col = hue_pal()(5)[i], lwd=2)
+}
+dev.off()
+
+tapply(pf, list(flowering$dose, flowering$variety), mean)
+
+# Back to lizards
+lizards <- read.table("Datasets/lizards.txt",header = TRUE,
+                      colClasses = c ("numeric", rep ("factor", 5)))
+head(lizards)
+
+lizards_sort <- lizards[order(lizards$species,
+                              lizards$sun,
+                              lizards$height,
+                              lizards$perch,
+                              lizards$time),]
+lizards_sort_top <- lizards_sort[1:24,]
+head(lizards_sort_top)
+names(lizards_sort_top)[1] <- "Ag"
+lizards_sort_top <- lizards_sort_top[,-6]
+
+lizards_new <- data.frame(lizards_sort$n[25:48], lizards_sort_top)
+names(lizards_new)[1] <- "Ao"
+head(lizards_new)
+
+y <- cbind(lizards_new$Ao, lizards_new$Ag)
+head(y)
+
+# Probability of flowered
+pf <- lizards_new$Ao / (lizards_new$Ao + lizards_new$Ag)
+
+# Stick it in the model
+lizards_model1 <- glm(y ~ sun * height * perch * time, binomial, 
+                      data = lizards_new)
+summary(lizards_model1)
+################################################################################
+# Binary Response Variables and GLMs
+isolation <- read.table("Datasets/isolation.txt", header = TRUE)
+head(isolation)
+
+# Model with interactions
+iso_mod1 <- glm(incidence ~ area * isolation, binomial, data = isolation)
+summary(iso_mod1)
+
+# Simple Model
+iso_mod2 <- glm(incidence ~ area + isolation, binomial, data = isolation)
+summary(iso_mod2)
+
+# Compare the two
+anova(iso_mod2, iso_mod1, test = "Chi")
+# Keep simpler
+
+# Plot the Univariate logistic regressions
+iso_moda <- glm(incidence ~ area, binomial, data = isolation)
+iso_modi <- glm(incidence ~ isolation, binomial, data = isolation)
+xva <- seq(0, 9, 0.01)
+yva <- predict(iso_moda, list(area = xva), type = "response")
+plot(isolation$area, isolation$incidence, xlab = "area", 
+     pch = 16, ylab = "incidence", col = "red")
+lines(xva, yva, col = hue_pal()(2)[1], lwd=2)
+
+xvi <- seq(0, 10, 0.01)
+yvi <- predict(iso_modi, list (isolation = xvi), type = "response")
+plot(isolation$isolation, isolation$incidence, xlab = "isolation",
+      ylab = "incidence", pch = 16, col = "blue")
+lines(xvi, yvi, col = hue_pal()(2)[2])
+
+# Graphical Tests (Very cool)
+occupation <- read.table("Datasets/occupation.txt", header = TRUE)
+head(occupation)
+
+# Fit the model
+occ_mod <- glm(occupied ~ resources, binomial, data = occupation)
+summary(occ_mod)
+
+# Create a rug plot
+pdf(paste0(plot_dir, "RugPlot.pdf"), width = 6, height = 4)
+plot(occupation$resources, occupation$occupied, type = "n",
+     xlab = "resources", ylab = "occupied or not")
+rug(occupation$resources[occupation$occupied == 0])
+rug(occupation$resources[occupation$occupied == 1], side = 3)
+xv <- 0:1000
+yv <- predict(occ_mod, list(resources = xv), type = "response")
+lines(xv, yv, col = hue_pal()(2)[1], lwd=2)
+dev.off()
+
+# Cut the data by ranges and plot
+occ_cut <- cut(occupation$resources, 5)
+
+# Total per cut
+tapply(occupation$occupied, occ_cut, sum)
+# Number of cases per bin
+table(occ_cut)
+
+# Empirical Probabilities
+occ_probs <- tapply(occupation$occupied, occ_cut, sum) / table(occ_cut)
+occ_probs
+
+occ_probs <- as.vector(occ_probs)
+resmeans <- as.vector(tapply(occupation$resources, occ_cut, mean))
+se <- as.vector(sqrt(occ_probs * (1 - occ_probs) / table(occ_cut)))
+up <- occ_probs + se
+down <- occ_probs - se
+
+# Plot the whole thing
+pdf(paste0(plot_dir, "RugPlot_Classes.pdf"), width = 6, height = 4)
+plot(occupation$resources, occupation$occupied, type = "n",
+     xlab = "resources", ylab = "occupied or not")
+rug(occupation$resources[occupation$occupied == 0])
+rug(occupation$resources[occupation$occupied == 1], side = 3)
+xv <- 0:1000
+yv <- predict(occ_mod, list(resources = xv), type = "response")
+lines(xv, yv, col = hue_pal()(2)[1], lwd=2)
+points(resmeans, occ_probs, cex=2, col = hue_pal()(2)[2], pch=19)
+for (i in 1:5) {
+  lines(rep(resmeans[i], 2), c(up[i], down[i]), col = hue_pal()(2)[2])
+}
+dev.off()
+
+# Mixed covariate types with a binary response
+infection <- read.table("Datasets/infection.txt", header = TRUE,
+                        colClasses = c("factor", rep("numeric", 2), "factor"))
+head(infection)
+
+boxplot(weight ~ infected, data = infection, col=hue_pal()(2)[1], pch=16)
+boxplot(age ~ infected, data = infection, col=hue_pal()(2)[2], pch=16)
+
+# Quick Summary
+table(infection$sex, infection$infected)
+
+# Fit the full model
+inf_mod1 <- glm(infected ~ age * weight * sex, family = binomial, data = infection)
+summary(inf_mod1)
+
+# Fit Minimal Model
+inf_mod2 <- glm(infected ~ age + weight + sex, family = binomial, data = infection)
+summary(inf_mod2)
+
+inf_mod3 <- glm(infected ~ age + weight + sex + I(weight^2) + I(age^2),
+                family = binomial, data = infection)
+summary(inf_mod3)
+
+# Spine plot and logistic regression
+wasps <- read.table("Datasets/wasps.txt", header = TRUE, 
+                    colClasses = list (fate = "factor"))
+head(wasps)
+
+table(wasps$density, wasps$fate)
+tapply(wasps$density, wasps$fate, sum)
+
+# SpinePlot
+spineplot(fate ~ density, data = wasps, col = hue_pal()(2))
+
+# Smoother
+cdplot(fate ~ density, data = wasps, col = hue_pal()(2))
+
+# log-transform density
+cdplot (fate ~ log(density), data = wasps, col = hue_pal()(2))
+
+# Create models for both
+wasps_mod1 <- glm(fate ~ density, binomial, data = wasps)
+summary(wasps_mod1)
+
+# log-transform the covariate
+wasps_mod2 <- glm(fate ~ log(density), binomial, data = wasps)
+summary(wasps_mod2)
+
+anova(wasps_mod1, wasps_mod2, test = "Chisq")
+
+pdf(paste0(plot_dir, "Wasps.pdf"), width = 6, height = 4)
+plot(jitter(log(wasps$density)), as.numeric(wasps$fate) - 1, 
+     col = hue_pal()(3)[1], xlim = c(0, 5), xlab = "jittered ln (density)",
+     ylab = "proportion parasitised")
+xv <- seq(0, 5, 0.01)
+yv <- 1 / (1 + 1 / exp(coef(wasps_mod2)[1] + coef(wasps_mod2)[2] * xv))
+lines(xv, yv, col = hue_pal ()(3)[2], lwd=2)
+
+den <- c(3.75, 16, 32, 64)
+pd <- c(3/15, 5/16, 20/32, 52/64)
+points(log(den), pd, cex = 2,, col = hue_pal()(4)[3], pch=19)
+eb <- sqrt(pd * (1 - pd) / den)
+for (i in 1:4) {
+  lines(rep (log (den[i]), 2), c (pd[i] - eb[i], pd[i] + eb[i]),
+        col = hue_pal ()(4)[4])
+  }
+dev.off()
+################################################################################
+# Bootstrapping a GLM
+timber <- read.table("Datasets/timber.txt", header = TRUE)
+head(timber)
+
+boxplot(log(timber))
+
+# Fit model
+timber_model <- glm(log(volume) ~ log(girth) + log(height), data = timber)
+summary(timber_model)
+
+library(boot)
+# Fit the model 2000 times
+model.boot1 <- function (data, indices){
+  sub_data <- data[indices,]
+  model <- glm(log(volume) ~ log(girth) + log(height), data = sub_data)
+  coef(model)
+}
+
+timber_boot <- boot(timber, model.boot1, R = 2000)
+timber_boot
+
+# Permute residuals
+yhat <- fitted(timber_model)
+resids <- resid(timber_model)
+res_data <- data.frame(resids, timber$girth, timber$height)
+
+model.boot2 <- function (res_data, i) {
+  y <- yhat + res_data[i,1]
+  nd <- data.frame(y, timber$girth, timber$height)
+  model <- glm(y ~ log(timber$girth) + log(timber$height), data = nd)
+  coef(model)
+}
+
+perms <- boot(res_data, model.boot2, R = 2000, sim = "permutation")
+perms
+
+# Build Confidence Intervals
+boot.ci(perms, index = 1, conf = 0.99)$bca[c (1, 4, 5)]
+boot.ci(perms, index = 2, conf = 0.99)$bca[c (1, 4, 5)]
+boot.ci(perms, index = 3, conf = 0.99)$bca[c (1, 4, 5)]
