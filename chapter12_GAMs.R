@@ -2,12 +2,15 @@
 library(scales)
 library(mgcv)
 library(tree)
+library(gratia)
+library(ggplot2)
+
 plot_dir <- "Plots/"
 
 soay <- read.table("Datasets/soaysheep.txt", header = TRUE)
 head(soay)
 
-# Delta was generated as below
+# Delta was generated as below: I did this to show the formula
 bs <- vector(mode = "numeric", length = nrow(soay))
 for (i in 1:nrow(soay)){
   bs[i] <- round(log(soay$Population[i+1]/soay$Population[i]), 9)
@@ -30,7 +33,7 @@ yv <- predict(soay_mod1, data.frame(Population = xv))
 lines(xv, yv, col = hue_pal()(3)[2], lwd=2)
 
 
-# Let's add confidence intervals
+# Let's add confidence intervals: These are not in the book
 plot(Population, Delta, col=hue_pal()(2)[1], pch=16)
 pred <- predict(soay_mod1, newdata = data.frame(Population = xv),
                 se = TRUE)
@@ -61,7 +64,8 @@ dev.off()
 thresh <- tree(Delta ~ Population, data = soay)
 print(thresh)
 
-# Firts split at
+# First split at
+# 2) Population < 1289.5 25 0.8596  0.226500
 th <- 1289.5
 soay_mod2 <- aov(Delta ~ (Population > th), data = soay)
 summary(soay_mod2)
@@ -84,6 +88,49 @@ legend("topright",
        lwd = c(2, 2),
        bty = "n")
 dev.off()
+detach(soay)
+# Tree has 3 parameters, loess has 4.6, and they are not much different, so 
+# tree is parsimoniously favorable
+################################################################################
+# An Example of GAM: Toy data
+hump <- read.table("Datasets/hump.txt", header = TRUE)
+head(hump)
+attach(hump)
+plot(x, y, col=hue_pal()(2)[1], pch=16)
+detach(hump)
+
+# s(x) is used to tell the function to smooth the data
+hump_mod <- gam(y ~ s(x), data = hump)
+summary(hump_mod)
+
+# fit the model using predict
+xv <- seq(min(hump$x), max(hump$x), 0.01)
+yv <- predict(hump_mod, list(x = xv))
+lines(xv, yv, col = hue_pal()(2)[2], lwd=2)
+
+# Another example, using infection data from GLM
+infection <- read.table("Datasets/infection.txt", header = TRUE,
+                      colClasses = c("factor", rep("numeric", 2), "factor"))
+head(infection)
+
+inf_gam <- gam(infected ~ sex + s(age) + s(weight), 
+               family = binomial, data = infection)
+summary(inf_gam)
+plot(inf_gam, col = hue_pal()(2)[1], shade = TRUE, shade.col = hue_pal()(2)[2])
+
+# Change the model: put age + age^2
+inf_gam2 <- gam(infected ~ I(age^2) + s(weight),
+  family = binomial, data = infection)
+summary(inf_gam2)
+
+plot(inf_gam2, shade = TRUE, shade.col = "lightblue", col = "blue")
+draw(inf_gam2) + theme_classic()
+
+# Use a GLM
+inf_mod6 <- glm(infected ~ age + I (age^2) + I((weight - 12) * (weight > 12)),
+                 family = binomial, data = infection)
+summary(inf_mod6)
+
 
 
 
