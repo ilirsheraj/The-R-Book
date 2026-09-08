@@ -88,6 +88,7 @@ legend("topright",
        lwd = c(2, 2),
        bty = "n")
 dev.off()
+
 detach(soay)
 # Tree has 3 parameters, loess has 4.6, and they are not much different, so 
 # tree is parsimoniously favorable
@@ -97,17 +98,21 @@ hump <- read.table("Datasets/hump.txt", header = TRUE)
 head(hump)
 attach(hump)
 plot(x, y, col=hue_pal()(2)[1], pch=16)
-detach(hump)
+# detach(hump)
 
 # s(x) is used to tell the function to smooth the data
 hump_mod <- gam(y ~ s(x), data = hump)
 summary(hump_mod)
 
 # fit the model using predict
+pdf(paste0(plot_dir, "Hump_plot.pdf"), width = 6, height = 4)
+plot(x, y, col=hue_pal()(2)[1], pch=16)
 xv <- seq(min(hump$x), max(hump$x), 0.01)
 yv <- predict(hump_mod, list(x = xv))
 lines(xv, yv, col = hue_pal()(2)[2], lwd=2)
+dev.off()
 
+detach(hump)
 # Another example, using infection data from GLM
 infection <- read.table("Datasets/infection.txt", header = TRUE,
                       colClasses = c("factor", rep("numeric", 2), "factor"))
@@ -124,7 +129,10 @@ inf_gam2 <- gam(infected ~ I(age^2) + s(weight),
 summary(inf_gam2)
 
 plot(inf_gam2, shade = TRUE, shade.col = "lightblue", col = "blue")
+
+pdf(paste0(plot_dir, "Infection_GAM.pdf"), width = 6, height = 4)
 draw(inf_gam2) + theme_classic()
+dev.off()
 
 # Use a GLM
 inf_mod6 <- glm(infected ~ age + I (age^2) + I((weight - 12) * (weight > 12)),
