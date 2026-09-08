@@ -139,6 +139,99 @@ inf_mod6 <- glm(infected ~ age + I (age^2) + I((weight - 12) * (weight > 12)),
                  family = binomial, data = infection)
 summary(inf_mod6)
 
+# Different cases of GAMs
+ozonepollution <- read.table("Datasets/ozone_pollution.txt", header = TRUE)
+head(ozonepollution)
 
+# We can plot the data and fit lowes curves
+pdf(paste0(plot_dir, "Ozone_lowes_fit.pdf"), width = 6, height = 4)
+pairs(ozonepollution, panel = function(x,y){
+  points(x, y, col=hue_pal()(2)[1], pch=16)
+  lines(lowess(x,y), col=hue_pal()(2)[2], lwd=2)
+})
+dev.off()
 
+# Fit fully non-parametric model
+ozone_gam1 <- gam(ozone ~ s(rad) + s(temp) + s(wind), data = ozonepollution)
+summary(ozone_gam1)
 
+# Remove radiation and compare
+ozone_gam2 <- gam(ozone ~ s(temp) + s(wind), data = ozonepollution)
+summary(ozone_gam2)
+
+# Compare using ANOVA
+anova(ozone_gam2, ozone_gam1, test = "F")
+
+# Interaction between wind and temperature
+ozone_gam3 <- gam(ozone ~ s(temp) + s(wind) + s(rad) + s(wind, by = temp),
+                   data = ozonepollution)
+summary(ozone_gam3)
+pdf(paste0(plot_dir, "Ozone_GAM_Residuals_3.pdf"), width = 6, height = 4)
+par(mfrow=c(2,2))
+plot(ozone_gam3, residuals = TRUE)
+dev.off()
+
+# Check the other way around too
+ozone_gam4 <- gam(ozone ~ s(temp) + s(wind) + s(rad) + s(temp, by = wind),
+                  data = ozonepollution)
+summary(ozone_gam4)
+pdf(paste0(plot_dir, "Ozone_GAM_Residuals_4.pdf"), width = 6, height = 4)
+par(mfrow=c(2,2))
+plot(ozone_gam4, residuals = TRUE)
+dev.off()
+# 3 is better
+
+# Ethanol example from SemiPar package
+# remotes::install_github("cran/SemiPar")
+library(SemiPar)
+data("ethanol")
+head(ethanol)
+pairs(ethanol, col=hue_pal()(6), pch=16)
+
+# NOX is humped in relation with ethanol; smooth Ethanol
+ethanol_mod1 <- gam(NOx ~ s(E) + C, data = ethanol)
+summary(ethanol_mod1)
+
+# Check in more details with coplot (conditioning plot)
+# Panels are read from bottom left (1)-(3) and then upper-left
+pdf(paste0(plot_dir, "Ethanol_Coplot.pdf"), width = 6, height = 4)
+coplot(NOx ~ C | E, panel = panel.smooth, data = ethanol, col = hue_pal()(10), pch=16)
+dev.off()
+
+# Fit another model with interacting terms
+ethanol_mod2 <- gam(NOx ~ s(E) + s(E, by = C), data = ethanol)
+summary(ethanol_mod2)
+
+# GAMs with binary data
+isolation <- read.table("Datasets/isolation.txt", header = TRUE)
+head(isolation)
+
+iso_gam1 <- gam(incidence ~ s(area) + s(isolation), binomial, data = isolation)
+summary(iso_gam1)
+par(mfrow=c(1,2))
+plot(iso_gam1, residuals = TRUE)
+par(mfrow=c(1,1))
+
+# delete area
+iso_gam2 <- gam(incidence ~ s(isolation), binomial, data = isolation)
+summary(iso_gam2)
+anova(iso_gam2, iso_gam1, test = "Chisq")
+
+# the relationship between isolation and indicence might be roughly linear
+iso_gam3 <- gam(incidence ~ s(area) + isolation, binomial, data = isolation)
+summary(iso_gam3)
+
+# Sexy 3D output from GAM
+some_function <- function(x, z, sx = 0.3, sz = 0.4){
+  (pi^sx * sz) * (1.2 * exp (-(x - 0.2)^2 / sx^2 - (z - 0.3)^2 / sz^2) +
+                    0.8 * exp (- (x - 0.7)^2 / sx^2 - (z - 0.8)^2 / sz^2))
+  }
+n <- 500
+x <- runif(n)
+z <- runif(n)
+y <- some_function (x, z) + rnorm (n) * 0.1
+some_model <- gam (y ~ s (x, z))
+
+pdf(paste0(plot_dir, "GAM_3D.pdf"), width = 6, height = 4)
+vis.gam (some_model, type = "response")
+dev.off()
