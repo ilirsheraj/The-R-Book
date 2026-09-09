@@ -104,7 +104,32 @@ library(predictmeans)
 residplot(farms_mod2)
 residplot(farms_mod4, level = 2)
 ################################################################################
-# MultiLevel Data
+# Multi-Level Data
+rats <- read.table("Datasets/rats.txt" , header = TRUE)
+head(rats)
 
+# A bit complicated: 3 Treatments, 2 rats per treatment, 3 pieces of liver per rat
+# 2 experimental replicates per piece of live: 3x2x3x2 = 36
+rats_num <- cumsum(!duplicated(rats[2:3]))
+rats$rat_num <- rats_num
+attach(rats)
+table(Treatment)
+table(Rat)
+table(rat_num)
+rats[names(rats) != "Glycogen"] <- lapply(rats[names(rats) != "Glycogen"], factor)
 
+# This time we use lme4
+library(lme4)
+# Treatment is fixed, rat_num and liver are random
+rats_mod1 <- lmer(Glycogen ~ Treatment + (1 | rat_num / Liver), data = rats)
+summary(rats_mod1)
 
+# We see that the total variance is about 14.17 + 36.06 + 21.17 = 71.40 and so about 50%
+# of the variation is between rats within treatments, 19.8% is between liver bits
+# within rats and 29.6% is between readings within liver bits within rats.
+pdf(paste0(plot_dir, "Rats_resid_plots_1.pdf"), width = 6, height = 4)
+residplot(rats_mod1, level = 1)
+dev.off()
+pdf(paste0(plot_dir, "Rats_resid_plots_2.pdf"), width = 6, height = 4)
+residplot(rats_mod1, level = 2)
+dev.off()
