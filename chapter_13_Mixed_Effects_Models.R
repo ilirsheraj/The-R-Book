@@ -1,6 +1,8 @@
 # Mixed Effects Models
 library(nlme)
 library(scales)
+library(lme4)
+library(predictmeans)
 
 plot_dir <- "Plots/"
 
@@ -100,7 +102,7 @@ summary(farms_mod4)
 anova(farms_mod4, farms_mod2)
 # No difference, model 2 is simpler, thus preferable
 
-library(predictmeans)
+# form predictmeans package
 residplot(farms_mod2)
 residplot(farms_mod4, level = 2)
 ################################################################################
@@ -119,7 +121,6 @@ table(rat_num)
 rats[names(rats) != "Glycogen"] <- lapply(rats[names(rats) != "Glycogen"], factor)
 
 # This time we use lme4
-library(lme4)
 # Treatment is fixed, rat_num and liver are random
 rats_mod1 <- lmer(Glycogen ~ Treatment + (1 | rat_num / Liver), data = rats)
 summary(rats_mod1)
