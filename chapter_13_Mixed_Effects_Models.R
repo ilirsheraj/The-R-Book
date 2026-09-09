@@ -134,3 +134,70 @@ dev.off()
 pdf(paste0(plot_dir, "Rats_resid_plots_2.pdf"), width = 6, height = 4)
 residplot(rats_mod1, level = 2)
 dev.off()
+################################################################################
+# Split-Plot Experiment
+yields <- read.table("Datasets/splityield.txt", header = TRUE)
+head(yields)
+# Make it simple by checking 2D tables, otherwise becomes too complicated
+table(yields$block, yields$irrigation)
+table(yields$block, yields$density)
+table(yields$block, yields$fertilizer)
+
+
+# Interaction fixed effects model
+yields_mod1 <- lme(yield ~ irrigation * density * fertilizer,
+                   random = ~ 1 | block / irrigation / density, data = yields)
+summary(yields_mod1)
+# This is huge, so lets parse the info we are interested in
+summary(yields_mod1)$tTable[, c (1, 5)]
+
+# This is REML, so we cant use ANOVA to compare models. Change to ML
+yields_mod1 <- lme(yield ~ irrigation * density * fertilizer,
+                   random = ~ 1 | block / irrigation / density,
+                   data = yields, method = "ML")
+yields_mod2 <- lme(yield ~ (irrigation + density + fertilizer) ^ 2,
+                   random = ~ 1 | block / irrigation / density, 
+                   data = yields, method = "ML")
+summary(yields_mod2)
+anova(yields_mod1, yields_mod2)
+# No significant Difference
+
+# A simpler model
+yields_mod3 <- lme(yield ~ irrigation * density + irrigation * fertilizer,
+                   random = ~ 1 | block / irrigation / density, 
+                   data = yields, method = "ML")
+anova(yields_mod1, yields_mod3)
+summary(yields_mod3)
+################################################################################
+# Longitudinal Data
+fert_results <- read.table("Datasets/fertilizer.txt" , header = TRUE)
+head(fert_results)
+table(fert_results$week, fert_results$plant)
+table(fert_results$fertilizer, fert_results$plant)
+
+library (lattice)
+fert_results <- groupedData(root ~ week | plant,
+                            outer = ~ fertilizer, fert_results)
+
+fert_results
+
+pdf(paste0(plot_dir, "Longitudinal_fertilizer.pdf"), width = 6, height = 4)
+plot(fert_results, pch=16)
+dev.off()
+
+pdf(paste0(plot_dir, "Longitudinal_fertilizer2.pdf"), width = 6, height = 4)
+plot(fert_results, outer = TRUE, pch=16)
+dev.off()
+
+# Fit model
+fert_mod1 <- lme(root ~ fertilizer + week, random = ~ week | plant,
+                 data = fert_results,
+                 control = list (msMaxIter = 200 , opt = "optim" ))
+summary(fert_mod1)
+
+fert_mod2 <- lme(root ~ fertilizer + week, random = ~ 1 | plant,
+                 data = fert_results,
+                 control = list (msMaxIter = 200 , opt = "optim" ))
+summary(fert_mod2)
+
+anova(fert_mod1, fert_mod2)
