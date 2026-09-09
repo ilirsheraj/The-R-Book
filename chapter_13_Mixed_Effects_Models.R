@@ -201,3 +201,21 @@ fert_mod2 <- lme(root ~ fertilizer + week, random = ~ 1 | plant,
 summary(fert_mod2)
 
 anova(fert_mod1, fert_mod2)
+################################################################################
+# Generalized Linear Mixed Models
+library(MASS)
+data("bacteria")
+head(bacteria)
+table(bacteria$y, bacteria$trt)
+table(bacteria$y, bacteria$week)
+
+bacteria_mod1 <- glmer(y ~ trt + week + (week | ID), family = binomial, 
+                       data = bacteria)
+summary(bacteria_mod1)
+
+# Make a simpler model
+bacteria_mod2 <- glmer(y ~ trt + week + (1 | ID), family = binomial,
+                       data = bacteria)
+summary(bacteria_mod2)
+
+anova(bacteria_mod1, bacteria_mod2)
