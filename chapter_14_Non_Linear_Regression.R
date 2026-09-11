@@ -271,7 +271,25 @@ dev.off()
 
 ################################################################################
 # Self-Starting functions: determine starting values automatically
+# SSmicmen() for Michaelis-Menten
+mm <- read.table("Datasets/mm.txt", header=TRUE)
+head(mm)
 
+plot(mm$rate ~ mm$conc, col = hue_pal()(1)[1],
+     xlab = "Concentration", 
+     ylab = "Reaction rate",
+     pch=16)
 
+mm_mod1 <- nls(rate ~ SSmicmen(conc, a, b), data = mm)
+summary(mm_mod1)
+
+# Equation: y = 212.7x/(0.064 + x) for y = ax/(b+x)
+plotfit(mm_mod1, smooth = TRUE, 
+        ylab = "Reaction rate" , 
+        xlab = "Concentration",
+        col.obs = hue_pal()(3)[1], 
+        col.fit = hue_pal()(3)[2], 
+        pch.obs = 16,
+        lwd = 2)
 
 
