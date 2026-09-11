@@ -1,2 +1,2 @@
 This is the code for **"The R Book"** Third Edition by Elinor Jones, Simon Harden and Michael J. Crawley. Im going throught the book and running the code at the same time. 
-Its very cool work, I wish I knew this years ago when I was struggling to learn R, especially applications of statistical modeling in R, instead of wasting time on SPSS!
+Its very cool work, I wish I knew the existence of this book years ago when I was struggling to learn R. Its a shallow but extremely wide survey of statistical modeling, all applied in R. I wasted so much time with applications of some of these models in SPSS years ago.
