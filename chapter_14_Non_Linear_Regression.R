@@ -99,28 +99,179 @@ plotfit(jaws_mod3, smooth = TRUE, ylab = "Jaw bone length",
 dev.off()
 
 # Asymptotic exponential model reaches asymptote quickly, MM still increases
+#############################################################################
+# Grouped Data: Enzyme kinetics of different bacterial strains
 reaction <- read.table("Datasets/reaction.txt", header=TRUE)
 head(reaction)
+
+table(reaction$strain)
+
+# Plot the data
+pdf(paste0(plot_dir, "Bacterial_Strains_Enzymes.pdf"), width = 6, height = 4)
 plot(reaction$enzyme, 
      reaction$rate, 
      pch=16, 
      col = hue_pal()(5)[as.factor(reaction$strain)],
      xlab = "Enzyme Concentration",
      ylab = "Reaction Rate")
+dev.off()
+
 
 library(nlme)
 reaction <- groupedData(rate ~enzyme | strain, data = reaction)
-reaction$strain <- factor(reaction$strain, levels = c(LETTERS[1:5]))
-plot(reaction, pch=16, col = hue_pal()(1)[1])
 
+# Keep the order
+reaction$strain <- factor(reaction$strain, levels = c(LETTERS[1:5]))
+
+pdf(paste0(plot_dir, "Bacterial_Strains_Grouped.pdf"), width = 6, height = 4)
+plot(reaction, pch=16, col = hue_pal()(1)[1])
+dev.off()
+
+# c rate without enzyme (y-intercept)
+par(mfrow = c(2, 3))
+for (s in levels(reaction$strain)) {
+  d <- subset(reaction, strain == s)
+  preview(
+    rate ~ c + a * enzyme / (1 + b * enzyme),
+    data = d,
+    start = list(a = 20, b = 0.1, c = 10),
+    variable = which(names(d) == "enzyme")
+  )
+}
+par(mfrow = c(1, 1))
+
+# To fit a model for each strain, we use nlsList
 react_mod1 <- nlsList(rate ~ c + a * enzyme / (1 + b * enzyme) | strain,
                       data = reaction, start = c (a = 20, b = 0.25, c = 10))
 summary(react_mod1)
 
+# Define colors 
+strain_cols <- rainbow(length(levels(reaction$strain)))
+names(strain_cols) <- levels(reaction$strain)
+
+pdf(paste0(plot_dir, "Bacterial_Strains_nls_Fitted.pdf"), width = 6, height = 5)
+plot(reaction$enzyme, reaction$rate,
+     col = strain_cols[reaction$strain],
+     pch = 16,
+     xlab = "Enzyme Concentration",
+     ylab = "Reaction Rate")
+
+# Add the fitted lines to each strain
+for (s in levels(reaction$strain)) {
+  d <- reaction[reaction$strain == s, ]
+  x <- seq(min(d$enzyme),
+           max(d$enzyme),
+           length.out = 100)
+  
+  # Convert row to a numeric vector
+  cf <- unlist(coef(react_mod1)[s, ])
+  
+  # Fitted nonlinear curve
+  y <- cf["c"] + cf["a"] * x / (1 + cf["b"] * x)
+  
+  lines(x, y,
+        col = strain_cols[s],
+        lwd = 2)
+}
+
+legend("topleft",
+       legend = levels(reaction$strain),
+       col = strain_cols,
+       pch = 16,
+       lwd = 2,
+       bty = "n")
+
+dev.off()
+
+# Include Random Effects
 react_mod2 <- nlme(rate ~ c + a * enzyme / (1 + b * enzyme), 
                    fixed = a + b + c ~ 1, random = a ~ 1 | strain, 
                    data = reaction,
                    start = c (a = 20, b = 0.25, c = 10))
 summary(react_mod2)
-
 coef(react_mod2)
+
+# Scatterplot
+pdf(paste0(plot_dir, "Bacterial_Strains_nls_random.pdf"), width = 6, height = 5)
+plot(reaction$enzyme, reaction$rate,
+     col = strain_cols[reaction$strain],
+     pch = 16,
+     xlab = "Enzyme Concentration",
+     ylab = "Reaction Rate")
+
+# Fitted curve for each strain
+for (s in levels(reaction$strain)) {
+  d <- reaction[reaction$strain == s, ]
+  x <- seq(min(d$enzyme),
+           max(d$enzyme),
+           length.out = 100)
+  
+  newdat <- data.frame(
+    enzyme = x,
+    strain = factor(s, levels = levels(reaction$strain))
+  )
+  
+  # Includes strain-specific random effect
+  y <- predict(react_mod2,
+               newdata = newdat,
+               level = 1)
+  
+  lines(x, y,
+        col = strain_cols[s],
+        lwd = 2)
+}
+
+legend("topleft",
+       legend = levels(reaction$strain),
+       col = strain_cols,
+       pch = 16,
+       lwd = 2,
+       bty = "n")
+dev.off()
+
+# Remove strain effect
+pdf(paste0(plot_dir, "Bacterial_Strains_nls_random_nostrain.pdf"), width = 6, height = 5)
+plot(reaction$enzyme, reaction$rate,
+     col = strain_cols[reaction$strain],
+     pch = 16,
+     xlab = "Enzyme Concentration",
+     ylab = "Reaction Rate")
+
+# Fitted curve for each strain
+for (s in levels(reaction$strain)) {
+  
+  d <- reaction[reaction$strain == s, ]
+  
+  x <- seq(min(reaction$enzyme),
+           max(reaction$enzyme),
+           length.out = 100)
+  
+  newdat <- data.frame(
+    enzyme = x,
+    strain = factor(levels(reaction$strain)[1],
+                    levels = levels(reaction$strain))
+  )
+  
+  y_pop <- predict(react_mod2,
+                   newdata = newdat,
+                   level = 0)
+  
+  lines(x, y_pop,
+        lwd = 3,
+        lty = 2)
+}
+
+legend("topleft",
+       legend = levels(reaction$strain),
+       col = strain_cols,
+       pch = 16,
+       lwd = 2,
+       bty = "n")
+dev.off()
+
+################################################################################
+# Self-Starting functions: determine starting values automatically
+
+
+
+
