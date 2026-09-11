@@ -99,3 +99,28 @@ plotfit(jaws_mod3, smooth = TRUE, ylab = "Jaw bone length",
 dev.off()
 
 # Asymptotic exponential model reaches asymptote quickly, MM still increases
+reaction <- read.table("Datasets/reaction.txt", header=TRUE)
+head(reaction)
+plot(reaction$enzyme, 
+     reaction$rate, 
+     pch=16, 
+     col = hue_pal()(5)[as.factor(reaction$strain)],
+     xlab = "Enzyme Concentration",
+     ylab = "Reaction Rate")
+
+library(nlme)
+reaction <- groupedData(rate ~enzyme | strain, data = reaction)
+reaction$strain <- factor(reaction$strain, levels = c(LETTERS[1:5]))
+plot(reaction, pch=16, col = hue_pal()(1)[1])
+
+react_mod1 <- nlsList(rate ~ c + a * enzyme / (1 + b * enzyme) | strain,
+                      data = reaction, start = c (a = 20, b = 0.25, c = 10))
+summary(react_mod1)
+
+react_mod2 <- nlme(rate ~ c + a * enzyme / (1 + b * enzyme), 
+                   fixed = a + b + c ~ 1, random = a ~ 1 | strain, 
+                   data = reaction,
+                   start = c (a = 20, b = 0.25, c = 10))
+summary(react_mod2)
+
+coef(react_mod2)
