@@ -292,4 +292,84 @@ plotfit(mm_mod1, smooth = TRUE,
         pch.obs = 16,
         lwd = 2)
 
+# Self-starting asymptotic exponential model: SSasymp()
+# y = a - be^(-cx)
+# Back to jaws data
+head(jaws)
+jaws_ss_mod1 <- nls(bone ~ SSasymp(age, a, b, c), data = jaws)
+summary(jaws_ss_mod1)
+
+# Visualize
+plotfit(jaws_ss_mod1, smooth = TRUE, 
+        xlab = "Age of Deer",
+        ylab = "Jaw Bone Length",
+        col.obs = hue_pal()(3)[1], 
+        col.fit = hue_pal()(3)[2], 
+        pch.obs = 16,
+        lwd = 2)
+
+# Two-parameters passing through the origin: SSasympOrig()
+# y = a(1-e^(-bx))
+jaws_ss_mod2 <- nls(bone ~ SSasympOrig(age, a, b), data = jaws)
+summary(jaws_ss_mod2)
+
+# Visualize again
+plotfit(jaws_ss_mod2, smooth = TRUE, 
+        xlab = "Age of Deer",
+        ylab = "Jaw Bone Length",
+        col.obs = hue_pal()(3)[1], 
+        col.fit = hue_pal()(3)[2], 
+        pch.obs = 16,
+        lwd = 2)
+
+# Self-Starting Logistic: 3-parameter growth models (SSlogis())
+# y = a / (1 + be^(-cx))
+sslogistic <- read.table("Datasets/sslogistic.txt", header = TRUE)
+head(sslogistic)
+
+plot(sslogistic$concentration,
+     sslogistic$density,
+     col = hue_pal()(1)[1],
+     xlab = "Concentration", 
+     ylab = "Density",
+     pch=16)
+
+sslogis_mod1 <- nls(density ~ SSlogis(log(concentration), a, b, c),
+                    data = sslogistic)
+summary(sslogis_mod1)
+
+# Plot the fitted line
+plotfit(sslogis_mod1, smooth = TRUE, 
+        xlab = "Concentration", 
+        ylab = "Density",
+        col.obs = hue_pal()(3)[1], 
+        col.fit = hue_pal()(3)[2], 
+        pch.obs = 16,
+        lwd = 2)
+
+# Self-Starting 4-parameter logistic: SSfpl()
+# y = a + [(b-a) / (1 + e^((d-x)/c))]
+chicks <- read.table("Datasets/chicks.txt", header = TRUE)
+head(chicks)
+
+plot(chicks$Time, chicks$weight,
+     xlab = "Time",
+     ylab = "Weight",
+     pch=16,
+     col=hue_pal()(2)[1])
+
+chicks_mod1 <- nls(weight ~ SSfpl(Time, a, b, c, d), data = chicks)
+summary(chicks_mod1)
+
+# Plot the fitted line
+plotfit(chicks_mod1, smooth = TRUE, 
+        xlab = "Time", 
+        ylab = "Weight",
+        col.obs = hue_pal()(3)[1], 
+        col.fit = hue_pal()(3)[2], 
+        pch.obs = 16,
+        lwd = 2)
+################################################################################
+# Further Considerations: Evaluation, CIs and Prediction, among others
+
 
