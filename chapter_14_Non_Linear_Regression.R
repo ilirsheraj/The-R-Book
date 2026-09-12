@@ -371,5 +371,22 @@ plotfit(chicks_mod1, smooth = TRUE,
         lwd = 2)
 ################################################################################
 # Further Considerations: Evaluation, CIs and Prediction, among others
+## We will use jaws_mpdel_2
+jaws_mod2 <- nls(bone ~ a * (1 - exp(-c * age)), data = jaws,
+                 start = list (a = 120, c = 0.064))
+summary(jaws_mod2)
 
+jaws_mod2_resids <- nlsResiduals(jaws_mod2)
+# I did this plots in a more customized way above
+plot(jaws_mod2_resids, which = 2)
+plot(jaws_mod2_resids, which = 6)
 
+# Highly influential observations in the data?
+jaws_mod2_jack <- nlsJack(jaws_mod2)
+summary(jaws_mod2_jack)
+
+# Let's get Confidence Intervals: with bootstrap
+jaws_mod2_boot <- nlsBoot(jaws_mod2)
+summary(jaws_mod2_boot)
+
+# EOF
