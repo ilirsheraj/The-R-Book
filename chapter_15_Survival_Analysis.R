@@ -57,3 +57,42 @@ legend("topright",
        bty = "n",
        cex = 0.5)
 dev.off()
+
+# The logrank test
+compare_treat <- survdiff(Surv(death, status) ~ treatment, data = cancer)
+compare_treat
+
+roaches <- read.table("Datasets/roaches.txt", header = TRUE)
+head(roaches)
+summary(roaches)
+
+hist(roaches$death)
+hist(roaches$weight)
+
+# Cox-Proportional Hazard (CoxPH)
+roach_model_ph1 <- coxph(Surv(death, status) ~ weight + group, data = roaches)
+summary(roach_model_ph1)
+
+# Since weight is not significant, rmeove it
+roach_model_ph2 <- coxph(Surv(death, status) ~ group, data = roaches)
+summary(roach_model_ph2)
+
+# Plot the thing
+km_roaches <- survfit(Surv(death, status) ~ group, data = roaches)
+
+pdf(paste0(plot_dir, "Kaplan_Meier_Roaches.pdf"), width = 5, height = 5)
+plot(km_roaches,
+     main = "KM Roaches",
+     xlab = "Survival Time",
+     ylab = "Probability of survival",
+     lwd = 2,
+     mark.time = TRUE,
+     col=hue_pal()(3)[1:3])
+
+legend("topright",
+       legend = c("Group A", "Group B", "Group C"),
+       fill = hue_pal()(3)[1:3],
+       bty = "n",
+       cex = 0.5)
+dev.off()
+
