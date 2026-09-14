@@ -391,6 +391,39 @@ tapply(roaches$death[roaches$status == 1], roaches$group[roaches$status == 1], m
 # Mean age at death/censoring for each group
 tapply(roaches$death, roaches$group, mean)
 
+plot(km_roaches,
+     main = "KM Roaches",
+     xlab = "Survival Time",
+     ylab = "Probability of survival",
+     lwd = 2,
+     mark.time = TRUE,
+     col=hue_pal()(3)[1:3])
 
+legend("topright",
+       legend = c("Group A", "Group B", "Group C"),
+       fill = hue_pal()(3)[1:3],
+       bty = "n",
+       cex = 0.5)
 
+attach(roaches)
+lines(predict(roach_model_wei2, 
+              newdata = list(group = "A"), 
+              type="quantile",
+              p = seq(0.01, 0.99, by = 0.01)), 
+      seq(0.99, 0.01, by = -0.01),
+      col = hue_pal()(3)[1])
+lines(predict(roach_model_wei2, 
+              newdata = list(group = "B"), 
+              type = "quantile",
+              p = seq(0.01, 0.99, by = 0.01)), 
+      seq(0.99, 0.01, by = -0.01),
+      col = hue_pal()(3)[2])
+lines(predict(roach_model_wei2, 
+              newdata = list(group = "C"), 
+              type = "quantile",
+              p = seq(0.01, 0.99, by = 0.01)), 
+      seq(0.99, 0.01, by = -0.01),
+      col = hue_pal ()(3)[3])
+detach(roaches)
 
+# EOF
