@@ -96,3 +96,133 @@ legend("topright",
        cex = 0.5)
 dev.off()
 
+################################################################################
+# 4 parametric Survival functions shown in the book but not plotted
+# First lets define the survival time from 0 to 100 units
+t <- seq(0, 100, length.out = 1000)
+
+# Define 3 Colours
+cols <- c("#F8766D", "#00BA38", "#619CFF")
+
+pdf(paste0(plot_dir, "Parametric_Functions_Simulation.pdf"), width = 8, height = 8)
+# Fix the 2 x 2 layout
+par(mfrow = c(2, 2), mar = c(4.5, 4.5, 2, 1))
+
+# Exponential: S(t) = exp(-a t)
+a <- c(1.00, 0.10, 0.01)
+S1 <- exp(-a[1] * t)
+S2 <- exp(-a[2] * t)
+S3 <- exp(-a[3] * t)
+
+plot(t, S1,
+     type = "l",
+     col = cols[1],
+     lwd = 1.5,
+     ylim = c(0, 1),
+     main = "Exponential",
+     xlab = "Time (t)",
+     ylab = "Probability of survival, S(t)")
+
+lines(t, S2, col = cols[2], lwd = 1.5)
+lines(t, S3, col = cols[3], lwd = 1.5)
+
+legend("topright",
+       legend = c(
+         expression(a == 1.00),
+         expression(a == 0.10),
+         expression(a == 0.01)),
+       col = cols,
+       lwd = 2,
+       bty = "n")
+
+# Weibull: S(t) = exp(-(a t)^b)
+weibull_surv <- function(t, a, b) {exp(-(a * t)^b)}
+
+S1 <- weibull_surv(t, a = 1.0, b = 2.0)
+S2 <- weibull_surv(t, a = 0.1, b = 2.0)
+S3 <- weibull_surv(t, a = 0.1, b = 3.0)
+
+plot(t, S1,
+     type = "l",
+     col = cols[1],
+     lwd = 1.5,
+     ylim = c(0, 1),
+     main = "Weibull",
+     xlab = "Time (t)",
+     ylab = "Probability of survival, S(t)")
+
+lines(t, S2, col = cols[2], lwd = 1.5)
+lines(t, S3, col = cols[3], lwd = 1.5)
+
+legend("topright",
+       legend = c(
+         expression(a == 1.0 ~ "," ~ b == 2.0),
+         expression(a == 0.1 ~ "," ~ b == 2.0),
+         expression(a == 0.1 ~ "," ~ b == 3.0)
+       ),
+       col = cols,
+       lwd = 2,
+       bty = "n")
+
+# Gompertz: S(t) = exp[-a/b * (exp(b t) - 1)]
+gompertz_surv <- function(t, a, b) {
+  exp(-(a / b) * (exp(b * t) - 1))}
+
+S1 <- gompertz_surv(t, a = 0.010, b = 0.100)
+S2 <- gompertz_surv(t, a = 0.050, b = 0.100)
+S3 <- gompertz_surv(t, a = 0.005, b = 0.010)
+
+plot(t, S1,
+     type = "l",
+     col = cols[1],
+     lwd = 1.5,
+     ylim = c(0, 1),
+     main = "Gompertz",
+     xlab = "Time (t)",
+     ylab = "Probability of survival, S(t)")
+
+lines(t, S2, col = cols[2], lwd = 1.5)
+lines(t, S3, col = cols[3], lwd = 1.5)
+
+legend("topright",
+       legend = c(
+         expression(a == 0.010 ~ "," ~ b == 0.100),
+         expression(a == 0.050 ~ "," ~ b == 0.100),
+         expression(a == 0.005 ~ "," ~ b == 0.010)),
+       col = cols,
+       lwd = 2,
+       bty = "n")
+
+# Log-logistic: S(t) = 1 / (1 + (a t)^b)
+loglogistic_surv <- function(t, a, b) {
+  1 / (1 + (a * t)^b)
+}
+
+S1 <- loglogistic_surv(t, a = 1.0, b = 2.0)
+S2 <- loglogistic_surv(t, a = 0.1, b = 1.0)
+S3 <- loglogistic_surv(t, a = 0.5, b = 0.5)
+
+plot(t, S1,
+     type = "l",
+     col = cols[1],
+     lwd = 1.5,
+     ylim = c(0, 1),
+     main = "Log-Logistic",
+     xlab = "Time (t)",
+     ylab = "Probability of survival, S(t)")
+
+lines(t, S2, col = cols[2], lwd = 1.5)
+lines(t, S3, col = cols[3], lwd = 1.5)
+
+legend("topright",
+       legend = c(
+         expression(a == 1.0 ~ "," ~ b == 2.0),
+         expression(a == 0.1 ~ "," ~ b == 1.0),
+         expression(a == 0.5 ~ "," ~ b == 0.5)),
+       col = cols,
+       lwd = 2,
+       bty = "n")
+dev.off()
+
+# 4 parametric Hazard functions shown in the book but not plotted
+
