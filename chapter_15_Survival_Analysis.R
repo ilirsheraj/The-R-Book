@@ -315,6 +315,7 @@ legend("topright",
 dev.off()
 
 ################################################################################
+# Cox-Proportional Hazard Models (CoxPH): semi-parametric
 roaches <- read.table("Datasets/roaches.txt", header = TRUE)
 head(roaches)
 summary(roaches)
@@ -366,3 +367,30 @@ dev.off()
 
 ################################################################################
 # Accelerated Failure Time (AFT) Models: Parametric
+# Exponential
+roach_model_exp1 <- survreg(Surv (death, status) ~ weight + group, 
+                            data = roaches, dist = "exponential")
+summary(roach_model_exp1)
+
+# Weibull
+roach_model_wei1 <- survreg(Surv (death, status) ~ weight + group,
+                            data = roaches)
+summary(roach_model_wei1)
+
+# Remeove the weight completely
+roach_model_wei2 <- survreg(Surv (death, status) ~ group,
+                            data = roaches)
+summary(roach_model_wei2)
+
+# Prediction of mean age at death, roach_model_wei2, for each group
+tapply(predict(roach_model_wei2), roaches$group, mean)
+
+# Mean age at death for each group, using only death (non-censored) times
+tapply(roaches$death[roaches$status == 1], roaches$group[roaches$status == 1], mean)
+
+# Mean age at death/censoring for each group
+tapply(roaches$death, roaches$group, mean)
+
+
+
+
