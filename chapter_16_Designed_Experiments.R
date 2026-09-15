@@ -69,3 +69,34 @@ tail(expanded_factors)
 
 ################################################################################
 # Part 2: Pseudo-Replication
+splityield <- read.table("Datasets/splityield.txt", header = TRUE)
+head(splityield)
+
+# Check the class of each
+sapply(splityield, class)
+
+# Error is from largest to smallest
+splityield_mod1 <- aov(yield ~ irrigation * density * fertilizer +
+                         Error(block/irrigation/density), data = splityield)
+summary(splityield_mod1)
+
+interaction.plot(splityield$fertilizer, splityield$irrigation, splityield$yield, 
+                 col = hue_pal()(4)[1:2], lwd = 2,
+                 trace.label = "Irrigation",
+                 xlab = "Fertilizer",
+                 ylab = "Mean of Yield")
+
+interaction.plot(splityield$density, splityield$irrigation, splityield$yield, 
+                 col = hue_pal()(4)[3:4], lwd = 2,
+                 trace.label = "Irrigation",
+                 xlab = "Fertilizer",
+                 ylab = "Density")
+# If there are NAs, use lme() or lmer() instead of aov()
+
+
+
+
+
+
+
+
