@@ -297,4 +297,74 @@ poly_means
 
 barplot(poly_means, names = levels(poly$treatment), col = hue_pal()(5))
 
+poly_lm <- lm(response ~ treatment, data = poly)
+summary(poly_lm)
 
+# Change the levels
+poly$treatment <- ordered(poly$treatment, levels = c("verylow", "low", "medium", "high"))
+levels(poly$treatment)
+
+poly_means <- tapply(poly$response, poly$treatment, mean)
+poly_means
+
+poly_mod1 <- lm(response ~ treatment, data = poly)
+summary(poly_mod1)
+
+contrasts(poly$treatment)
+
+pm_coefs <- coef(poly_mod1)
+contrasts(poly$treatment) %*% pm_coefs[2:4] + pm_coefs[1]
+
+x <- 1:4
+barplot(poly_means ~ x, names = names(poly_means), col = hue_pal()(5)[1:4])
+xv <- seq(1, 4, 0.01)
+poly_mod2 <- lm(poly_means ~ poly(x, 3))
+yv <- predict(poly_mod2, list (x = xv))
+bar_x <- barplot(poly_means, plot = F)
+xv_map <- lm(bar_x ~ I(1:4))
+xs <- coef(xv_map)[1] + coef(xv_map)[2] * xv
+lines(xs, yv, col = hue_pal ()(5)[5], lwd = 2)
+
+# Multiple Covariates Contrasts
+stoats <- read.table("Datasets/stoats.txt", header = TRUE)
+head(stoats)
+
+stoats_male <- stoats[stoats$sex == "male",]
+stoats_female <- stoats[stoats$sex == "female",]
+
+pdf(paste0(plot_dir, "Stoats.pdf"), width = 5, height = 4)
+plot(stoats_male$age, stoats_male$weight, type = "b",
+     main = "", xlab = "age", ylab = "weight (kgs)",
+     ylim = range(stoats$weight), pch = 16,
+     col = hue_pal()(2)[1])
+lines(stoats_female$age, stoats_female$weight, type = "b",
+      pch = 16, col = hue_pal()(2)[2])
+legend(2, 18, legend = c ("male", "female"), col = hue_pal()(2),
+       lwd = rep (2, 2))
+dev.off()
+
+# All Data
+lm(weight ~ age, data = stoats)
+
+# males
+lm(weight ~ age, data = stoats_male)
+
+# females
+lm(weight ~ age, data = stoats_female)
+
+# Model with interaction
+stoats_mod1 <- lm(weight ~ age * sex, data = stoats)
+summary(stoats_mod1)
+
+anova_1 <- aov(weight ~ age * sex, data = stoats)
+summary(anova_1)
+
+options(contrasts = c("contr.helmert", "contr.poly"))
+stoats_mod2 <- lm(weight ~ age * sex, data = stoats)
+summary(stoats_mod2)
+
+options(contrasts = c("contr.sum", "contr.poly"))
+stoats_mod3 <- lm(weight ~ age * sex, data = stoats)
+summary(stoats_mod3)
+
+# EOF
