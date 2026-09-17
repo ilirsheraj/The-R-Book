@@ -148,10 +148,61 @@ interaction.plot(splityield$density, splityield$irrigation, splityield$yield,
 # If there are NAs, use lme() or lmer() instead of aov()
 ################################################################################
 # Part 3: Contrasts
+comp <- read.table("Datasets/competition.txt", header = TRUE,
+                   colClasses = list (clipping = "factor"))
+head(comp)
+table(comp$clipping)
 
+# Calculate the means for all classes
+tapply(comp$biomass, comp$clipping, mean)
 
+# Visualize it
+pdf(paste0(plot_dir, "Biomass_by_Clipping.pdf"), width = 5, height = 5)
+comp %>% group_by(clipping) %>% 
+  summarise(mean_group = mean(biomass), .groups = "drop") %>% 
+  ggplot(aes(clipping, mean_group, fill = clipping)) + 
+  geom_col() +
+  labs(title = "Biomass by Clipping",
+       x = "Clipping Method",
+       y = "Mean Biomass") +
+  theme_classic() +
+  theme(legend.position = "none")
+dev.off()
 
+# Fit a classical ANOVA
+comp_mod1 <- aov(biomass ~ clipping, data = comp)
+summary(comp_mod1)
+# There is significance, but where exactly is it?
+## Control seems the lowest, n25 and n50 seems similar, r10 and r5 are also similar
 
+# Use linear model for more details
+comp_mod1 <- lm(biomass ~ clipping, data = comp)
+summary(comp_mod1)
+# Control is the base, all are higher than base
+## Now use contrasts to see each on its own
+contrasts(comp$clipping) <- cbind(c(4, -1, -1, -1, -1), # control vs rest
+                                  c(0, 1, 1, -1, -1), # n25/50 vs r10/5
+                                  c(0, 0, 0, 1, -1), # r10 vs r5
+                                  c(0, 1, -1, 0, 0)) # n25 vs n50
 
+# See how it looks like: check column-wise
+comp$clipping[[2]]
+head(comp)
 
+comp_mod2 <- lm(biomass ~ clipping, data = comp)
+summary(comp_mod2)
+
+# Check specific contrasts
+mean(comp$biomass)
+
+# Control vs rest
+c1 <- factor(1 + (comp$clipping != "control"))
+tapply(comp$biomass, c1, mean)
+
+mean(comp$biomass) - tapply(comp$biomass,c1,mean)[2]
+
+# Second contrast
+c2 <- factor(2 * (comp$clipping == "n25") + 2 * (comp$clipping == "n50") + 
+               (comp$clipping == "r10") + (comp$clipping == "r5"))
+(tapply(comp$biomass, c2, mean)[3] - tapply(comp$biomass, c2, mean)[2]) / 2
 
