@@ -1,5 +1,6 @@
 # Designed Experiments
 library(scales)
+library(tidyverse)
 
 plot_dir <- "Plots/"
 
@@ -18,6 +19,59 @@ barplot(tapply(growth$gain, list(growth$diet, growth$supplement), mean),
         beside = TRUE, col = hue_pal()(3), ylim = c(0, 30))
 legend(1.5, 30, legend=c("barley", "oats", "wheat"), fill = hue_pal()(3))
 dev.off()
+
+# use ggplot
+growth %>%
+  group_by(supplement, diet) %>%
+  summarise(mean_gain = mean(gain),
+            .groups = "drop")
+
+growth %>% group_by(supplement, diet) %>%
+  summarise(mean_gain = mean(gain), .groups = "drop") %>%
+  ggplot(aes(x = supplement, y = mean_gain, fill = diet)) +
+  geom_col(position = "dodge") +
+  scale_fill_hue() +
+  scale_y_continuous(limits = c(0, 30)) +
+  labs(
+    x = "Supplement",
+    y = "Mean gain",
+    fill = "Diet") +
+  theme_classic()
+
+# Or even simpler
+ggplot(growth, aes(x = supplement, y = gain, fill = diet)) +
+  stat_summary(fun = mean,
+               geom = "col",
+               position = "dodge") +
+  scale_fill_hue() +
+  scale_y_continuous(limits = c(0, 30)) +
+  labs(x = "Supplement",
+       y = "Mean gain",
+       fill = "Diet") +
+  theme_classic()
+
+# Add error bars
+growth_summary <- growth %>% group_by(supplement, diet) %>%
+  summarise(
+    mean_gain = mean(gain),
+    se = sd(gain) / sqrt(n()),
+    .groups = "drop")
+
+ggplot(growth_summary, aes(x = supplement, y = mean_gain, fill = diet)) +
+  geom_col(position = position_dodge(width = 0.9),
+           width = 0.8) +
+  geom_errorbar(
+    aes(ymin = mean_gain - se,
+        ymax = mean_gain + se),
+    position = position_dodge(width = 0.9),
+    width = 0.2) +
+  scale_fill_hue() +
+  scale_y_continuous(limits = c(0, 30)) +
+  labs(x = "Supplement",
+       y = "Mean gain ± SE",
+       fill = "Diet") +
+  theme_classic()
+
 
 # We can see the means for all of them
 tapply(growth$gain, list(growth$diet, growth$supplement), mean)
@@ -92,7 +146,8 @@ interaction.plot(splityield$density, splityield$irrigation, splityield$yield,
                  xlab = "Fertilizer",
                  ylab = "Density")
 # If there are NAs, use lme() or lmer() instead of aov()
-
+################################################################################
+# Part 3: Contrasts
 
 
 
