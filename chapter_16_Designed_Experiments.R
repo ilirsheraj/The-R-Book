@@ -206,3 +206,56 @@ c2 <- factor(2 * (comp$clipping == "n25") + 2 * (comp$clipping == "n50") +
                (comp$clipping == "r10") + (comp$clipping == "r5"))
 (tapply(comp$biomass, c2, mean)[3] - tapply(comp$biomass, c2, mean)[2]) / 2
 
+# A-Posteriori: Model simplification for contrasts
+comp$clipping[[2]]
+
+# Remove the contrasts
+contrasts(comp$clipping) <- NULL
+comp$clipping[[2]]
+
+# Group together r10 and r5 as "root"
+clipping2 <- comp$clipping
+levels(clipping2)[4:5] <- "root"
+levels(clipping2)
+
+comp <- data.frame(comp, clipping2)
+head(comp)
+
+# Fit a new model and compare to the previous one
+comp_mod3 <- lm(biomass ~ clipping2, data = comp)
+summary(comp_mod3)
+
+anova(comp_mod3, comp_mod1)
+# No significant difference (obvious from the plot)
+
+# Group together n25 nd n50 also" "shoot"
+clipping3 <- comp$clipping2
+levels(clipping3)[2:3] <- "shoot"
+levels(clipping3)
+
+comp <- data.frame(comp, clipping3)
+head(comp)
+
+# Stick it again in model
+comp_mod4 <- lm(biomass ~ clipping3, data = comp)
+summary(comp_mod4)
+
+# Compare to model 3
+anova(comp_mod4, comp_mod3)
+# Again no difference
+
+# Put all treatments together vs control
+clipping4 <- comp$clipping3
+levels(clipping4)[2:3] <- "pruned"
+levels(clipping4)
+
+comp <- data.frame(comp, clipping4)
+comp_mod5 <- lm(biomass ~ clipping4, data = comp)
+summary(comp_mod5)
+
+anova(comp_mod5, comp_mod4)
+# Simpler is better
+
+tapply(comp$biomass, comp$clipping4, mean)
+
+# Helmhert Contrasts
