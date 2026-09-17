@@ -287,4 +287,14 @@ comp_mod8 <- lm(biomass ~ clipping, data = comp)
 summary(comp_mod8)
 
 # Polynomial Contrasts
+poly <- read.table("Datasets/poly.txt", header = TRUE, 
+                   colClasses = list(treatment = "factor"))
+head(poly)
+levels(poly$treatment)
+
+poly_means <- tapply(poly$response, poly$treatment, mean)
+poly_means
+
+barplot(poly_means, names = levels(poly$treatment), col = hue_pal()(5))
+
 
