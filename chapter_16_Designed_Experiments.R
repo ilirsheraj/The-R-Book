@@ -156,6 +156,8 @@ table(comp$clipping)
 # Calculate the means for all classes
 tapply(comp$biomass, comp$clipping, mean)
 
+comp_means <- tapply(comp$biomass, comp$clipping, mean)
+
 # Visualize it
 pdf(paste0(plot_dir, "Biomass_by_Clipping.pdf"), width = 5, height = 5)
 comp %>% group_by(clipping) %>% 
@@ -258,4 +260,31 @@ anova(comp_mod5, comp_mod4)
 
 tapply(comp$biomass, comp$clipping4, mean)
 
-# Helmhert Contrasts
+# Helmert Contrasts
+contrasts(comp$clipping)
+
+options(contrasts = c("contr.helmert", "contr.poly"))
+contrasts(comp$clipping)
+
+comp_mod6 <- lm(biomass ~ clipping, data = comp)
+summary(comp_mod6)
+
+mean(comp_means[1:2]) - comp_means[1]
+
+# Sum Contrasts
+options(contrasts = c("contr.sum", "contr.poly"))
+contrasts(comp$clipping)
+
+comp_mod7 <- lm(biomass ~ clipping, data = comp)
+summary(comp_mod7)
+
+# calculate estimates
+comp_means[1:4] - mean(comp_means)
+
+# Change the order and stick it again back
+comp$clipping <- factor(comp$clipping, levels = c("n25", "n50", "r5", "r10", "control"))
+comp_mod8 <- lm(biomass ~ clipping, data = comp)
+summary(comp_mod8)
+
+# Polynomial Contrasts
+
