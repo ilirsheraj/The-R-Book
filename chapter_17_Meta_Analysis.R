@@ -7,6 +7,7 @@ library(metafor)
 plot_dir <- "Plots/"
 
 # Analysis below will be performed using metafor functions
+# Part 1: Scaled Differences
 metadata <- read.table("Datasets/metadata.txt", header = TRUE)
 metadata
 
@@ -41,3 +42,33 @@ pdf(paste0(plot_dir, "Random_Effects_Meta.pdf"), width = 6, height = 5)
 forest(random_boren, header = TRUE, slab = paste (dat_boren$study))
 dev.off()
 
+# Funnel Plot: 
+pdf(paste0(plot_dir, "Random_Effects_Funnel_Plot.pdf"), width = 4, height = 6)
+funnel(random_boren, xlab = "Standardized Mean Difference")
+dev.off()
+
+# Part 2: Categorical Data
+metadata2 <- read.table("Datasets/metadata2.txt", header = TRUE)
+metadata2
+# Odds Ratio: "OR"
+dat_categ <- escalc(measure = "OR", 
+                    ai = successT, 
+                    bi = failureT,
+                    ci = successC, 
+                    di = failureC,
+                    data = metadata2)
+dat_categ
+
+random_categ <- rma(yi = yi, vi = vi, data = dat_categ, method = "DL")
+random_categ
+
+pdf(paste0(plot_dir, "Random_Effects_Meta_Categorical_logodd.pdf"), width = 7, height = 5)
+forest(random_categ, header = TRUE, slab = paste(dat_categ$study))
+dev.off()
+
+pdf(paste0(plot_dir, "Random_Effects_Meta_Categorical_odd.pdf"), width = 7, height = 5)
+forest(random_categ, header = TRUE, slab = paste(dat_categ$study), atransf = exp)
+dev.off()
+
+# This is a huge field on it's own, but this much exploration was cool
+# EOF
