@@ -24,4 +24,20 @@ dat_boren
 # yi: effect size
 # vi: variance
 
-pdf(paste0(plot_dir, "Growth_Barplot.pdf"), width = 6, height = 5.5)
+# Run the meta-analysis using rma() function on the object created above
+## First model on fixed effects: "FE"
+fixed_boren <- rma(yi = yi, vi = vi, data = dat_boren, method = "FE")
+fixed_boren
+
+pdf(paste0(plot_dir, "Fixed_Effects_Meta.pdf"), width = 6, height = 5)
+forest(fixed_boren, header = TRUE, slab = paste(dat_boren$study))
+dev.off()
+
+## Random Effects Model: DL (DerSimonian and Laird’s Method)
+random_boren <- rma(yi = yi, vi = vi, data = dat_boren, method = "DL")
+random_boren
+
+pdf(paste0(plot_dir, "Random_Effects_Meta.pdf"), width = 6, height = 5)
+forest(random_boren, header = TRUE, slab = paste (dat_boren$study))
+dev.off()
+
