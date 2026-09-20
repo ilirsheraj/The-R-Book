@@ -36,5 +36,13 @@ lines(x = seq(6.5, 150.5, 1), y = ma(temp$temps, 12),
       col = hue_pal()(4)[4], lwd=2)
 
 # Blowflies Data
-blowfly <- read.table ("blowfly.txt" , header = T)
+blowfly <- read.table("Datasets/blowfly.txt" , header = TRUE)
+head(blowfly)
 head.matrix(blowfly)
+
+# Convert it into time series object
+flies <- ts(blowfly$flies)
+flies
+
+plot(flies, col=hue_pal()(1), lwd=2)
+
