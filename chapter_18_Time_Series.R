@@ -41,13 +41,15 @@ lines(x = seq(6.5, 150.5, 1), y = ma(temp$temps, 12),
       col = hue_pal()(4)[4], lwd=3)
 dev.off()
 
-# Blowflies Data
+# Blowflies Data: A bit of a nuissance here
 blowfly <- read.table("Datasets/blowfly.txt" , header = TRUE)
 head(blowfly)
-head.matrix(blowfly)
+blowfly <- blowfly[grepl("^[0-9.]+$", trimws(blowfly$flies)), , drop = FALSE]
+blowfly$flies <- as.numeric(as.character(blowfly$flies))
 
 # Convert it into time series object
 flies <- ts(blowfly$flies)
+length(flies)
 flies
 
 pdf(paste0(plot_dir, "Blowflies_TS_Plot.pdf"), width = 6, height = 5)
@@ -56,4 +58,31 @@ dev.off()
 
 pdf(paste0(plot_dir, "Blowflies_TS_2.pdf"), width = 6, height = 5)
 plot.ts(flies, lwd=2, col=hue_pal()(1))
+dev.off()
+
+# Autocorrelation and Partial Autocorrelation
+# lag 1-4
+pdf(paste0(plot_dir, "Blowflies_lag_1_4.pdf"), width = 8, height = 8)
+par(mfrow = c(2, 2))
+sapply(1:4, function (x) plot(flies[-(361: (361 - x + 1))], flies[-(1:x)],
+                              xlab = "", ylab = "", col = hue_pal()(8)[x],
+                              pch = 16))
+dev.off()
+# par(mfrow = c(1, 1))
+
+# lags 7-10
+pdf(paste0(plot_dir, "Blowflies_lag_7_10.pdf"), width = 8, height = 8)
+par(mfrow = c(2, 2))
+sapply (7:10, function (x) plot(flies[-(361: (361 - x + 1))], flies[-(1:x)],
+                                xlab = "", ylab = "", col = hue_pal()(8)[x - 2],
+                                pch=16))
+# par(mfrow = c(1, 1))
+dev.off()
+
+# Autocorrelation Function
+pdf(paste0(plot_dir, "Blowflies_AutoCorrelation_Partial_Autocorrelation.pdf"), 
+    width = 8, height = 4)
+par(mfrow = c(1, 2))
+acf(flies, col = hue_pal()(2)[1], main = "", lwd=2)
+acf(flies, type = "p", col = hue_pal()(2)[2], main = "", lwd=2)
 dev.off()
