@@ -129,5 +129,25 @@ acf(flies_1, col = hue_pal()(2)[1], main = "", lwd=2)
 acf(flies_1, type = "p", col = hue_pal()(2)[2], main = "", lwd=2)
 dev.off()
 
-# Seasonal Data
+# Seasonal Data: rainfall and temperature over 19 years in england
+silwood <- read.table("Datasets/SilwoodWeather.txt", header = TRUE)
+head(silwood)
+tail(silwood)
 
+# delete the leap year
+silwood <- silwood[-seq(365 + 31 + 29, nrow(silwood), 365 * 4 + 1),]
+
+# Autocorrelation by month
+month_ts <- ts(as.vector(tapply(silwood$upper, list(silwood$month, silwood$yr), mean)))
+head(month_ts)
+month_ts
+
+pdf(paste0(plot_dir, "Silwood_Autocorrelation.pdf"), 
+    width = 6, height = 4)
+acf(month_ts, main="", col=hue_pal()(2)[1], lwd=2)
+dev.off()
+
+
+years_ts <- ts(as.vector(tapply(silwood$upper, list(silwood$yr), mean)))
+years_ts
+acf(years_ts, main="", col=hue_pal()(2)[1], lwd=2)
