@@ -112,4 +112,22 @@ acf(flies_detrended, col = hue_pal()(3)[2], main = "", lwd=2)
 acf(flies_detrended, type = "p", col = hue_pal()(3)[3], main = "", lwd=2)
 dev.off()
 
+# Do the same for the more regular first half of the data
+flies_1 <- flies[1:200]
+
+flies_detrended_1 <- flies_1 - predict(lm (flies_1 ~ I (1:length (flies_1))))
+
+pdf(paste0(plot_dir, "Blowflies_first_half.pdf"), width = 6, height = 4)
+plot.ts(flies_detrended_1, col = hue_pal()(3)[1], 
+        ylab = "flies (detrended)", xaxt = "n", lwd = 2)
+dev.off()
+
+pdf(paste0(plot_dir, "Blowflies_correlations_part1.pdf"), 
+    width = 8, height = 4)
+par(mfrow = c(1, 2))
+acf(flies_1, col = hue_pal()(2)[1], main = "", lwd=2)
+acf(flies_1, type = "p", col = hue_pal()(2)[2], main = "", lwd=2)
+dev.off()
+
+# Seasonal Data
 
