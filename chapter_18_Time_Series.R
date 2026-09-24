@@ -138,22 +138,50 @@ tail(silwood)
 silwood <- silwood[-seq(365 + 31 + 29, nrow(silwood), 365 * 4 + 1),]
 
 # Autocorrelation by month
-# First average by month
+# First average by month: Get a matrix 12x9
 tapply(silwood$upper, list(silwood$month, silwood$yr), mean)
 
-# Flatten it
+# Flatten the matrix
 as.vector(tapply(silwood$upper, list(silwood$month, silwood$yr), mean))
 
+# Now convert it to time series: Monthly averages for 19 years
 month_ts <- ts(as.vector(tapply(silwood$upper, list(silwood$month, silwood$yr), mean)))
 head(month_ts)
 month_ts
 
-pdf(paste0(plot_dir, "Silwood_Autocorrelation.pdf"), 
+pdf(paste0(plot_dir, "Silwood_Monthly_Autocorrelation.pdf"), 
     width = 6, height = 4)
 acf(month_ts, main="", col=hue_pal()(2)[1], lwd=2)
 dev.off()
 
+# Now take yearly averages: A vector
+tapply(silwood$upper, list(silwood$yr), mean)
 
+# Convert to time series
 years_ts <- ts(as.vector(tapply(silwood$upper, list(silwood$yr), mean)))
 years_ts
+
+pdf(paste0(plot_dir, "Silwood_Yearly_Autocorrelation.pdf"), 
+    width = 6, height = 4)
 acf(years_ts, main="", col=hue_pal()(2)[1], lwd=2)
+dev.off()
+
+# Use ts default functions
+## Daily (365)
+daily_ts <- ts(silwood$upper, start = c(1987, 1), frequency = 365)
+plot(daily_ts, ylab="degrees", col=hue_pal()(1))
+
+## Monthly: 12
+month_ts <- ts(as.vector(tapply(silwood$upper, list(silwood$month, silwood$yr), mean)),
+               start = c(1987, 1), frequency = 12)
+plot(month_ts, ylab="degrees", col=hue_pal()(1))
+
+## Yearly: 1
+years_ts <- ts(as.vector(tapply(silwood$upper, silwood$yr, mean)),
+               start = 1987, frequency = 1)
+plot(years_ts, ylab="degrees", col=hue_pal()(1))
+
+# Decompose and plot all in one
+upper_decomp <- stl(daily_ts, "periodic")
+plot(upper_decomp, col=hue_pal()(2)[1], col.range = hue_pal()(2)[2])
+
