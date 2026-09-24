@@ -138,6 +138,12 @@ tail(silwood)
 silwood <- silwood[-seq(365 + 31 + 29, nrow(silwood), 365 * 4 + 1),]
 
 # Autocorrelation by month
+# First average by month
+tapply(silwood$upper, list(silwood$month, silwood$yr), mean)
+
+# Flatten it
+as.vector(tapply(silwood$upper, list(silwood$month, silwood$yr), mean))
+
 month_ts <- ts(as.vector(tapply(silwood$upper, list(silwood$month, silwood$yr), mean)))
 head(month_ts)
 month_ts
