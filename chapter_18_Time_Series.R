@@ -86,3 +86,30 @@ par(mfrow = c(1, 2))
 acf(flies, col = hue_pal()(2)[1], main = "", lwd=2)
 acf(flies, type = "p", col = hue_pal()(2)[2], main = "", lwd=2)
 dev.off()
+
+# Examine the data from week 200 to the end
+flies_2 <- flies[201:length(flies)]
+
+# Look for linear trend
+blowlfies_mod <- lm(flies_2 ~ I(1:length(flies_2)))
+summary(blowlfies_mod)
+# 22 extra flies for each week
+
+# de-trend the data
+flies_detrended <- flies_2 - predict(lm (flies_2 ~ I (1:length (flies_2))))
+
+# Now plot the thing
+pdf(paste0(plot_dir, "Blowflies_second_half.pdf"), width = 6, height = 4)
+plot.ts(flies_detrended, col = hue_pal()(3)[1], 
+        ylab = "flies (detrended)", xaxt = "n", lwd = 2)
+axis(1, at = seq(0, 150, 50), labels = seq(201, 361, 50))
+dev.off()
+
+pdf(paste0(plot_dir, "Blowflies_correlations_part2.pdf"), 
+    width = 8, height = 4)
+par(mfrow = c(1, 2))
+acf(flies_detrended, col = hue_pal()(3)[2], main = "", lwd=2)
+acf(flies_detrended, type = "p", col = hue_pal()(3)[3], main = "", lwd=2)
+dev.off()
+
+
