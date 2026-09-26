@@ -192,28 +192,39 @@ dev.off()
 
 # Decompose and plot all in one
 upper_decomp <- stl(daily_ts, "periodic")
-plot(upper_decomp, col=hue_pal()(2)[1], col.range = hue_pal()(2)[2])
 
-# TBC
+pdf(paste0(plot_dir, "Silwood_Decomposed.pdf"), width = 8, height = 6)
+plot(upper_decomp, col=hue_pal()(2)[1], col.range = hue_pal()(2)[2])
+dev.off()
+
+# Cycles
 # Equation of a cycle is defined by means of sine and cosine functions
 # y_t = \alpha + \beta*sin(2*\pi*t) + \gamma*cos(2*\pi*t) + \epsilon_t
-## Need to estimate three parameters
+## Need to estimate three parameters: alpha. beta and gamma
 # yearly cycle: gotta be 19
 time <- (1:nrow(silwood)/365)
 
-silwood_mod1 <- lm(upper ~ sin(2 * pi * time) + cos(2 * pi * time), data = silwood)
+silwood_mod1 <- lm(upper ~ sin(2 * pi * time) + cos(2 * pi * time), 
+                   data = silwood)
 summary(silwood_mod1)
 
 # Plot the model against the real data
+pdf(paste0(plot_dir, "Model_vs_Real_Data.pdf"), width = 6, height = 4)
 plot(silwood$upper, ylab = "upper", pch=".", col=hue_pal()(2)[1])
 lines(1:(nrow(silwood)),predict(silwood_mod1), col=hue_pal()(2)[2], lwd=2)
+dev.off()
 
 # Plot the residuals
+pdf(paste0(plot_dir, "Model_Residuals.pdf"), width = 6, height = 4)
 plot(silwood_mod1$residuals, main="", pch=".", col=hue_pal()(2)[1])
+dev.off()
 
 # Check for serial correlation in residuals
-acf(silwood_mod1$residuals, main="", col=hue_pal()(2)[1])
-acf(silwood_mod1$residuals, type = "p", main="", col=hue_pal()(2)[2])
+pdf(paste0(plot_dir, "Residual_Series_Correlation.pdf"), width = 6, height = 4)
+par(mfrow = c(1, 2))
+acf(silwood_mod1$residuals, main="", col=hue_pal()(2)[1], lwd=2)
+acf(silwood_mod1$residuals, type = "p", main="", col=hue_pal()(2)[2], lwd=2)
+dev.off()
 
 # Trend + Remainder
 head(upper_decomp$time.series)
