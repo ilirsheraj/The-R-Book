@@ -185,3 +185,19 @@ plot(years_ts, ylab="degrees", col=hue_pal()(1))
 upper_decomp <- stl(daily_ts, "periodic")
 plot(upper_decomp, col=hue_pal()(2)[1], col.range = hue_pal()(2)[2])
 
+# TBC
+# Equation of a cycle is defined by means of sine and cosine functions
+# y_t = \alpha + \beta*sin(2*\pi*t) + \gamma*cos(2*\pi*t) + \epsilon_t
+## Need to estimate three parameters
+# yearly cycle: gotta be 19
+time <- (1:nrow(silwood)/365)
+
+silwood_mod1 <- lm(upper ~ sin(2 * pi * time) + cos(2 * pi * time), data = silwood)
+summary(silwood_mod1)
+
+# Plot the model against the real data
+plot(silwood$upper, ylab = "upper", pch=".", col=hue_pal()(2)[1])
+lines(1:(nrow(silwood)),predict(silwood_mod1), col=hue_pal()(2)[2], lwd=2)
+
+# Plot the residuals
+plot(silwood_mod1$residuals, main="", pch=".", col=hue_pal()(2)[1])
