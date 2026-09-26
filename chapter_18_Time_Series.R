@@ -226,7 +226,7 @@ acf(silwood_mod1$residuals, main="", col=hue_pal()(2)[1], lwd=2)
 acf(silwood_mod1$residuals, type = "p", main="", col=hue_pal()(2)[2], lwd=2)
 dev.off()
 
-# Trend + Remainder
+# Testing for Possible Trend
 head(upper_decomp$time.series)
 trend_rem <- upper_decomp$time.series[,"trend"] + upper_decomp$time.series[,"remainder"]
 head(trend_rem)
@@ -234,6 +234,7 @@ head(trend_rem)
 # Stick it in linear model
 silwood_mod2 <- lm(trend_rem ~ I(1:length(trend_rem)))
 summary(silwood_mod2)
+# 1.888e-04 degrees per day, 0.07 degrees per year increase
 
 # Part 4: Multiple Time Series
 twoseries <- read.table("twoseries.txt", header = TRUE)
