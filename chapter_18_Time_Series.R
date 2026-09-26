@@ -201,3 +201,27 @@ lines(1:(nrow(silwood)),predict(silwood_mod1), col=hue_pal()(2)[2], lwd=2)
 
 # Plot the residuals
 plot(silwood_mod1$residuals, main="", pch=".", col=hue_pal()(2)[1])
+
+# Check for serial correlation in residuals
+acf(silwood_mod1$residuals, main="", col=hue_pal()(2)[1])
+acf(silwood_mod1$residuals, type = "p", main="", col=hue_pal()(2)[2])
+
+# Trend + Remainder
+head(upper_decomp$time.series)
+trend_rem <- upper_decomp$time.series[,"trend"] + upper_decomp$time.series[,"remainder"]
+head(trend_rem)
+
+# Stick it in linear model
+silwood_mod2 <- lm(trend_rem ~ I(1:length(trend_rem)))
+summary(silwood_mod2)
+
+# Part 4: Multiple Time Series
+twoseries <- read.table("twoseries.txt", header = TRUE)
+head(twoseries)
+
+twoseries <- ts(twoseries)
+twoseries
+ts.plot(twoseries, col=hue_pal()(2), lwd=2)
+legend(10, 500, legend = c ("x", "y"), lwd = 1, col = hue_pal()(2))
+
+acf(twoseries, type = "p", col=hue_pal()(10))
