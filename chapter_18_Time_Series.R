@@ -169,17 +169,26 @@ dev.off()
 # Use ts default functions
 ## Daily (365)
 daily_ts <- ts(silwood$upper, start = c(1987, 1), frequency = 365)
+
+pdf(paste0(plot_dir, "Silwood_TS_All.pdf"), width = 6, height = 4)
 plot(daily_ts, ylab="degrees", col=hue_pal()(1))
+dev.off()
 
 ## Monthly: 12
 month_ts <- ts(as.vector(tapply(silwood$upper, list(silwood$month, silwood$yr), mean)),
                start = c(1987, 1), frequency = 12)
-plot(month_ts, ylab="degrees", col=hue_pal()(1))
+
+pdf(paste0(plot_dir, "Silwood_Monthly_TS.pdf"), width = 6, height = 4)
+plot(month_ts, ylab="degrees", col=hue_pal()(1), lwd=2)
+dev.off()
 
 ## Yearly: 1
 years_ts <- ts(as.vector(tapply(silwood$upper, silwood$yr, mean)),
                start = 1987, frequency = 1)
-plot(years_ts, ylab="degrees", col=hue_pal()(1))
+
+pdf(paste0(plot_dir, "Silwood_Yearly_TS.pdf"), width = 6, height = 4)
+plot(years_ts, ylab="degrees", col=hue_pal()(1), lwd=2)
+dev.off()
 
 # Decompose and plot all in one
 upper_decomp <- stl(daily_ts, "periodic")
