@@ -237,7 +237,7 @@ summary(silwood_mod2)
 # 1.888e-04 degrees per day, 0.07 degrees per year increase
 
 # Part 4: Multiple Time Series
-twoseries <- read.table("twoseries.txt", header = TRUE)
+twoseries <- read.table("Datasets/twoseries.txt", header = TRUE)
 head(twoseries)
 
 twoseries <- ts(twoseries)
