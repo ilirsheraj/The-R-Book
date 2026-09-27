@@ -251,3 +251,35 @@ dev.off()
 pdf(paste0(plot_dir, "Two_Series_Corr_Autococrr.pdf"), width = 6, height = 6)
 acf(twoseries, type = "p", col=hue_pal()(10))
 dev.off()
+
+# ARIMA Analysis
+lynx <- read.table("Datasets/lynx.txt", header = TRUE)
+head(lynx)
+
+pdf(paste0(plot_dir, "Lynx_TS.pdf"), width = 6, height = 4)
+plot.ts(lynx$Lynx, col = hue_pal()(3)[1], ylab = "lynx skins", xaxt = "n", lwd=2)
+dev.off()
+
+pdf(paste0(plot_dir, "Lynx_Co_and_Autocorrelation.pdf"), width = 6, height = 4)
+par(mfrow = c(1, 2))
+acf(lynx$Lynx, col = hue_pal()(3)[2], main = "", lwd=2)
+acf(lynx$Lynx, type = "p", col = hue_pal()(3)[3], main = "", lwd=2)
+dev.off()
+
+# Differencing
+lynx_aics <- numeric(6)
+names(lynx_aics) <- 0:5
+
+for (q in 0:5) {
+  lynx_aics[q + 1] <- arima(lynx$Lynx, order = c(2, 1, q))$aic
+}
+
+lynx_aics
+
+# Smalles is for q4
+which.min(lynx_aics)
+lynx_aics[5]
+
+# Now fit a model
+lynx_mod <- arima(lynx$Lynx, order = c(2, 1, 4))
+lynx_mod
