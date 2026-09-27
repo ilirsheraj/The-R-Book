@@ -242,7 +242,12 @@ head(twoseries)
 
 twoseries <- ts(twoseries)
 twoseries
+
+pdf(paste0(plot_dir, "Multiple_Series.pdf"), width = 6, height = 4)
 ts.plot(twoseries, col=hue_pal()(2), lwd=2)
 legend(10, 500, legend = c ("x", "y"), lwd = 1, col = hue_pal()(2))
+dev.off()
 
+pdf(paste0(plot_dir, "Two_Series_Corr_Autococrr.pdf"), width = 6, height = 6)
 acf(twoseries, type = "p", col=hue_pal()(10))
+dev.off()
