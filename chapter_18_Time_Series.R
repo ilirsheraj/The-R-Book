@@ -283,3 +283,69 @@ lynx_aics[5]
 # Now fit a model
 lynx_mod <- arima(lynx$Lynx, order = c(2, 1, 4))
 lynx_mod
+
+# Time Series Simulation
+set.seed(271828)
+
+white_noise <- arima.sim(list(order = c(0, 0, 0)), n = 1000)
+
+pdf(paste0(plot_dir, "White_Noise_TS.pdf"), width = 6, height = 4)
+plot(white_noise, ylab = "", col = hue_pal()(15)[1], lwd=2)
+dev.off()
+
+pdf(paste0(plot_dir, "White_Noise_Co_and_Autocorrelation.pdf"), width = 6, height = 4)
+par(mfrow = c(1, 2))
+acf(white_noise, main = "", col = hue_pal()(15)[2], lwd=2)
+acf(white_noise, type = "p", main = "", col = hue_pal()(15)[3], lwd=2)
+dev.off()
+
+# Simulate a new one: a1 = 1, a2 = -0.7
+set.seed(182845)
+
+ar2 <- arima.sim(list(order = c (2, 0, 0), ar = c(1, -0.7)), n = 1000)
+
+plot(ar2, ylab = "", col = hue_pal()(15)[4], lwd=2)
+acf(ar2, main = "", col = hue_pal()(15)[5], lwd=2)
+acf(ar2, type = "p", main = "", col = hue_pal()(15)[6], lwd=2)
+
+# Another simulation: b1=2, b2=-1, b3=1.3
+set.seed(904523)
+
+ma3 <- arima.sim(list(order = c(0, 0, 3), ma = c(2, -1, 1.3)), n = 1000)
+
+plot(ma3, ylab = "", col = hue_pal()(15)[7], lwd=2)
+acf(ma3, main = "", col = hue_pal()(15)[8], lwd=2)
+acf(ma3, type = "p", main = "", col = hue_pal()(15)[9], lwd=2)
+
+# Simulate a new one integrrating both TSs above, plus differencing order 1
+set.seed(536028)
+
+ar2d1ma3 <- arima.sim(list(order = c(2, 1, 3), ar = c(1, -0.7), 
+                           ma = c(2, -1, 1.3)), n = 1000)
+
+pdf(paste0(plot_dir, "Simulated_Complex_TimeSeries.pdf"), width = 6, height = 4)
+plot(ar2d1ma3, ylab = "", col = hue_pal()(15)[10], lwd=2)
+dev.off()
+
+pdf(paste0(plot_dir, "Simulated_TS_Co_and_Autocorrelation.pdf"), width = 6, height = 4)
+par(mfrow = c(1, 2))
+acf(ar2d1ma3, main = "", col = hue_pal()(15)[11], lwd=2)
+acf(ar2d1ma3, type = "p", main = "", col = hue_pal()(15)[12], lwd=2)
+dev.off()
+
+set.seed (747135)
+ar2ma3 <- arima.sim(list(order = c(2, 0, 3), ar = c(1, -0.7), 
+                         ma = c(2, -1, 1.3)), n = 1000)
+
+plot(ar2ma3, ylab = "", col = hue_pal()(15)[13], lwd = 2)
+acf(ar2ma3, main = "", col = hue_pal()(15)[14], lwd = 2)
+acf(ar2ma3, type = "p", main = "", col = hue_pal()(15)[15], lwd = 2)
+
+sim_mod1 <- arima(ar2d1ma3, order = c(3, 0, 5))
+summary(sim_mod1)
+sim_mod1$aic
+
+sim_mod2 <- arima(ar2d1ma3, order = c(2, 0, 3))
+sim_mod2$aic
+
+# EOF
