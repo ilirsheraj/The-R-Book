@@ -107,23 +107,39 @@ names(pgdata)
 hist(pgdata$richness)
 
 pgfull <- pgdata[, 1:54]
+
+# prcomp() is for better numerical accuracy
 pg_pca10 <- prcomp(pgfull, scale. = TRUE, rank. = 10)
+
+# PC1 (loading) of the species
 pg_pca10$rotation[,1]
+sort(pg_pca10$rotation[,1])
 
 # Compare PCA1 and PCA2
+pg_pca10$rotation[,c(1,2)]["AP",]
+
+pdf(paste0(plot_dir, "PCA_biplot.pdf"), width = 5, height = 5)
 biplot(pg_pca10)
+dev.off()
+
+plot(pg_pca10$rotation[,1],
+     pg_pca10$rotation[,2],
+     xlab = "PC1",
+     ylab = "PC2",
+     pch = 16)
+
 summary(pg_pca10)
 
 # Variance Explained
 barplot(pg_pca10$sdev[1:10]^2, main = "", col = hue_pal()(2)[1],
         cex.axis = 1, ylab = "")
 
-
 # Calculate variance explained by each principal component
 pca_var <- pg_pca10$sdev^2
 pca_ve  <- pca_var / sum(pca_var) * 100
 
 # Draw the scree plot
+pdf(paste0(plot_dir, "PCA_Variance_Percent_Scree_Plot.pdf"), width = 5, height = 4)
 barplot(pca_ve[1:10], 
         col =  hue_pal()(2)[1],
         xlab = "Principal Component", 
@@ -131,14 +147,18 @@ barplot(pca_ve[1:10],
         main = "Scree Plot",
         # names.arg = paste0("PC", 1:10),
         ylim = c(0, max(pca_ve[1:10]) + 5))
+dev.off()
 
+pdf(paste0(plot_dir, "PCA_Variance_Scree_Plot.pdf"), width = 5, height = 4)
 barplot(pca_var[1:10], 
         col = hue_pal()(2)[1],
         xlab = "Principal Component", 
         ylab = "Variance Explained",
         main = "Scree Plot",
         ylim = c(0, max(pca_var[1:10]) + 1))
+dev.off()
 
+# Prediction
 yv <- predict(pg_pca10)[,1]
 plot(pgdata$hay, yv, xlab = "", ylab = "PC1", col= hue_pal()(2)[1], pch=16)
 
