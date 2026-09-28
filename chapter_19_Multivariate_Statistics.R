@@ -102,6 +102,7 @@ pgdata <- read.table("Datasets/pgfull.txt", header = TRUE)
 head(pgdata)
 
 names(pgdata)
+
 # Princinple species and variables that explain output variation
 hist(pgdata$richness)
 
@@ -124,7 +125,7 @@ pca_ve  <- pca_var / sum(pca_var) * 100
 
 # Draw the scree plot
 barplot(pca_ve[1:10], 
-        col = "royalblue",
+        col =  hue_pal()(2)[1],
         xlab = "Principal Component", 
         ylab = "Percentage of Variance Explained (%)",
         main = "Scree Plot",
@@ -132,7 +133,7 @@ barplot(pca_ve[1:10],
         ylim = c(0, max(pca_ve[1:10]) + 5))
 
 barplot(pca_var[1:10], 
-        col = "royalblue",
+        col = hue_pal()(2)[1],
         xlab = "Principal Component", 
         ylab = "Variance Explained",
         main = "Scree Plot",
