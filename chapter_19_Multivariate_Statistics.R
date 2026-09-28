@@ -45,21 +45,23 @@ dev.off()
 
 ################################################################################
 # Multivariate Analysis of Variance (MANOVA)
-plastic <- read.table("manova.txt", header = TRUE)
+plastic <- read.table("Datasets/manova.txt", header = TRUE)
 head(plastic)
 
 table(plastic$additive, plastic$rate)
 
-# Three outcomes combined together
+# Three outcomes combined together: Creates a numerical matrix
 plastic_out <- cbind(plastic$tear, plastic$gloss, plastic$opacity)
 head(plastic_out)
 
+# Give it column names
 colnames(plastic_out) <- colnames(plastic)[1:3]
 head(plastic_out)
 
-
+# Fit the model with interactions between respeonse variables
 plastic_mod1 <- manova(plastic_out ~ plastic$rate * plastic$additive)
 summary(plastic_mod1)
+# Interaction not significant
 
 # Without interaction
 plastic_mod2 <- manova(plastic_out ~ plastic$rate + plastic$additive)
@@ -67,7 +69,6 @@ summary(plastic_mod2)
 
 summary.aov(plastic_mod2)
 
-# Break with the convention and use Tidyverse
 # Pivot the data into a long format so R treats the measurements as one column
 plastic_long <- pivot_longer(plastic, 
                              cols = c(tear, gloss, opacity), 
@@ -76,24 +77,28 @@ plastic_long <- pivot_longer(plastic,
 head(plastic_long)
 
 # Create a grouped boxplot
+pdf(paste0(plot_dir, "Plastic_Additive_Level_Plot.pdf"), width = 5, height = 5)
 ggplot(plastic_long, aes(x = Measurement, y = Value, fill = additive)) +
   geom_boxplot() +
   labs(title = "Plastic Properties by Additive Level",
        x = "Property Type",
        y = "Value") +
   theme_classic()
+dev.off()
 
+pdf(paste0(plot_dir, "Plastic_Rate_Level_Plot.pdf"), width = 5, height = 5)
 ggplot(plastic_long, aes(x = Measurement, y = Value, fill = rate)) +
   geom_boxplot() +
   labs(title = "Plastic Properties by Rate Level",
        x = "Property Type",
        y = "Value") +
   theme_classic()
+dev.off()
 
 ################################################################################
 # Principle Component Analysis (PCA)
 # 54 (col 1:54, AC - VK) plant species grown in 89 plots for 10 years
-pgdata <- read.table("pgfull.txt", header = TRUE)
+pgdata <- read.table("Datasets/pgfull.txt", header = TRUE)
 head(pgdata)
 
 names(pgdata)
@@ -108,8 +113,9 @@ pg_pca10$rotation[,1]
 biplot(pg_pca10)
 summary(pg_pca10)
 
-# barplot(pg_pca10$sdev[1:10]^2, main = "", col = hue_pal()(2)[1], 
-#         cex.axis = 2, ylab = "")
+# Variance Explained
+barplot(pg_pca10$sdev[1:10]^2, main = "", col = hue_pal()(2)[1],
+        cex.axis = 1, ylab = "")
 
 
 # Calculate variance explained by each principal component
