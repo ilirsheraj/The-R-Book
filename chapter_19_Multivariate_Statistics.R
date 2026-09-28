@@ -160,12 +160,22 @@ dev.off()
 
 # Prediction
 yv <- predict(pg_pca10)[,1]
+fit <- lm(yv ~ pgdata$hay)
+
+pdf(paste0(plot_dir, "PCA1_vs_hay.pdf"), width = 5, height = 4)
 plot(pgdata$hay, yv, xlab = "", ylab = "PC1", col= hue_pal()(2)[1], pch=16)
+abline(fit, col = hue_pal()(2)[1], lwd = 2)
+dev.off()
 
 yv2 <- predict(pg_pca10)[,2]
+fit <- lm(yv2 ~ pgdata$pH)
+
+pdf(paste0(plot_dir, "PCA2_vs_ph.pdf"), width = 5, height = 4)
 plot(pgdata$pH, yv2, xlab = "", ylab = "PC2", col = hue_pal()(2)[2], pch=16)
+abline(fit, col = hue_pal()(2)[2], lwd = 2)
+dev.off()
 
-
+################################################################################
 # Factor Analysis
 pg_fact8 <- factanal(pgfull, 8)
 loadings(pg_fact8)
