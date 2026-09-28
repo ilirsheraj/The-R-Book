@@ -251,3 +251,36 @@ taxa_kn$cluster
 # See how well it has clustered them
 table(taxa$Taxon, taxa_kn$cluster)
 
+# 2 - Hierarchical Clustering
+## back to pgdata
+head(pgdata[1:54])
+
+# Add labels
+labels <- paste(pgdata$plot, letters[pgdata$lime], sep = "")
+
+# Check whether the lables are unqiue
+sort(table(labels))
+
+# Calculate the distance: here we use plot distance (89x89 matrix)
+pgdist <- dist(pgdata[,1:54])
+
+# Check it
+dim(as.matrix(pgdist))
+
+hpg <- hclust(pgdist)
+
+pdf(paste0(plot_dir, "pg_data_hierarchical_clustering.pdf"), width = 8, height = 6)
+plot(hpg, labels = labels, main = "", xlab = "", ylab = "", axes = FALSE, 
+     sub = "", cex = 0.6)
+dev.off()
+
+# Do the same on taxonomic data
+head(taxa)
+
+pdf(paste0(plot_dir, "taxa_hierarchical_clustering.pdf"), width = 8, height = 6)
+plot(hclust(dist(taxa[,-1])), main = "", xlab = "", ylab = "", axes = FALSE, 
+     sub = "", cex = 0.6)
+dev.off()
+
+################################################################################
+# Linear Discriminant Analysis
