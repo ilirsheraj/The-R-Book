@@ -208,3 +208,46 @@ dev.off()
 
 ################################################################################
 # Cluster Analysis
+# 1 - K-means
+kmd <- read.table("Datasets/kmeansdata.txt", header = TRUE)
+head(kmd)
+table(kmd$group)
+
+pdf(paste0(plot_dir, "KM_Cluster_Plot.pdf"), width = 6, height = 6)
+plot(kmd$x, kmd$y, col=hue_pal()(6)[kmd$group],
+     pch=16,
+     xlab = "X",
+     ylab = "Y")
+dev.off()
+
+# 4-6 clusters
+model4 <- kmeans(kmd[, 1:2], 4)
+model5 <- kmeans(kmd[, 1:2], 5)
+model6 <- kmeans(kmd[, 1:2], 6)
+
+pdf(paste0(plot_dir, "KM_4_6_Cluster_Plot.pdf"), width = 8, height = 8)
+par(mfrow = c(2, 2))
+plot(kmd$x, kmd$y, col=hue_pal()(4)[model4[[1]]],
+     pch=16, xlab = "", ylab = "", main = "k=4")
+
+plot(kmd$x, kmd$y, col=hue_pal()(5)[model5[[1]]],
+     pch=16, xlab = "", ylab = "", main = "k=5")
+
+plot(kmd$x, kmd$y, col=hue_pal()(6)[model6[[1]]],
+     pch=16, xlab = "", ylab = "", main = "k=6")
+
+plot(kmd$x, kmd$y, col=hue_pal()(6)[kmd$group],
+     pch=16, xlab = "", ylab = "", main = "Original")
+dev.off()
+
+# Back to taxonomy dataset
+head(taxa)
+
+# kmeans with k=4
+taxa_kn <- kmeans(taxa[,-1], 4)
+taxa_kn$centers
+taxa_kn$cluster
+
+# See how well it has clustered them
+table(taxa$Taxon, taxa_kn$cluster)
+
