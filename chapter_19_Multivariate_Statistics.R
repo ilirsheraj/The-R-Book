@@ -6,17 +6,20 @@ library(tidyr)
 plot_dir <- "Plots/"
 
 
-pdf(paste0(plot_dir, "Temperature_TS_Raw_Plot.pdf"), width = 6, height = 5)
-
-taxa <- read.table("taxonomy.txt", header = T, colClasses = list(Taxon = "factor"))
+taxa <- read.table("Datasets/taxonomy.txt", header = T, 
+                   colClasses = list(Taxon = "factor"))
 head(taxa)
 
 # Remove the automatic title
+pdf(paste0(plot_dir, "Taxa_Corrplot.pdf"), width = 6, height = 6)
 chart.Correlation(taxa[, 2:8], histogram = TRUE, pch = 20, main = "")
+dev.off()
 
 # Radar Plot
+pdf(paste0(plot_dir, "Taxa_Radar_Plot.pdf"), width = 5, height = 5)
 stars(taxa[,2:8], locations = c(0, 0), key.loc = c(0, 0), radius = F,
       col.lines = hue_pal()(120))
+dev.off()
 
 ################################################################################
 # Multivariate Analysis of Variance (MANOVA)
