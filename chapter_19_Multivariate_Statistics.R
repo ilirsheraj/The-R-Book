@@ -5,20 +5,42 @@ library(tidyr)
 
 plot_dir <- "Plots/"
 
+# Moving away from classical statistics: Looking for Structure in the data
+## Unsupervised Learning
 
+# 7 Plant characteristics
 taxa <- read.table("Datasets/taxonomy.txt", header = T, 
                    colClasses = list(Taxon = "factor"))
 head(taxa)
+
+table(taxa$Taxon)
 
 # Remove the automatic title
 pdf(paste0(plot_dir, "Taxa_Corrplot.pdf"), width = 6, height = 6)
 chart.Correlation(taxa[, 2:8], histogram = TRUE, pch = 20, main = "")
 dev.off()
 
-# Radar Plot
+# Radar Plot: Track individual observations along any variable
 pdf(paste0(plot_dir, "Taxa_Radar_Plot.pdf"), width = 5, height = 5)
 stars(taxa[,2:8], locations = c(0, 0), key.loc = c(0, 0), radius = F,
       col.lines = hue_pal()(120))
+dev.off()
+
+# Lets make it more visible
+taxa_summary <- taxa %>% 
+  group_by(Taxon) %>% 
+  summarize(across(everything(), mean)) %>% 
+  as.data.frame()
+
+pdf(paste0(plot_dir, "Taxa_Mean_Radar_Plot.pdf"), width = 5, height = 5)
+stars(taxa_summary[, -1],
+      locations = c(0, 0),
+      key.loc = c(0, 0),
+      radius = TRUE,
+      col.lines = hue_pal()(4),
+      lwd = 2,
+      main = "Mean traits by taxon",
+      xlim = c(-1.5, 2), ylim = c(-1.3, 1.3))
 dev.off()
 
 ################################################################################
