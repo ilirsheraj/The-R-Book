@@ -177,7 +177,34 @@ dev.off()
 
 ################################################################################
 # Factor Analysis
+head(pgfull)
+
 pg_fact8 <- factanal(pgfull, 8)
 loadings(pg_fact8)
 
+# Lets make it more visible/explicit
+L <- unclass(loadings(pg_fact8))
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# Order variables by the factor they load most strongly on
+main_factor <- apply(abs(L), 1, which.max)
+var_order <- rownames(L)[order(main_factor, -apply(abs(L), 1, max))]
+
+pdf(paste0(plot_dir, "Factor_Analysis.pdf"), width = 6, height = 6)
+as.data.frame(L) %>%
+  tibble::rownames_to_column("Variable") %>%
+  pivot_longer(-Variable, names_to = "Factor", values_to = "Loading") %>%
+  mutate(Variable = factor(Variable, levels = rev(var_order))) %>%
+  ggplot(aes(Factor, Variable, fill = Loading)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = ifelse(abs(Loading) >= 0.3, round(Loading, 2), "")), size = 3) +
+  scale_fill_gradient2(low = "steelblue", mid = "white", high = "firebrick",
+                       limits = c(-1, 1)) +
+  labs(x = NULL, y = NULL) +
+  theme_minimal()
+dev.off()
+
+################################################################################
 # Cluster Analysis
