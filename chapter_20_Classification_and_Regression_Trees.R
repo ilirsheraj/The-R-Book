@@ -59,23 +59,32 @@ print(pollute_mod1)
 # terminal nodes designated with *
 # deviance is the penultimate number: gets smaller with further splits
 
-# use a better library: rpart
+# use a better library: rpart (recursive partition)
 # library(rpart)
 pollute_mod3 <- rpart(Pollution ~ ., data = pollute)
-
 # This gives lots of information in summary
 summary(pollute_mod3)
+# rpart considers interactions between variables
 
 pdf(paste0(plot_dir, "Pollution_Tree_rpart.pdf"), width = 6, height = 4)
 plot(pollute_mod3, margin = 0.1)
 text(pollute_mod3, use.n = TRUE, cex = 0.9)
 dev.off()
 
+# Lets do some more deeper analysis based on rpart output
 temp_big <- factor(pollute$Temp >= 56.25)
 ind_small <- factor(pollute$Industry < 597)
+
+# Now look at the interaction between them
 pollute_mod4 <- lm(pollute$Pollution ~ temp_big * ind_small)
 summary(pollute_mod4)
 
 pollute_mod5 <- lm(pollute$Pollution ~ temp_big * ind_small + pollute$Population)
 summary(pollute_mod5)
+
+# In summary, the tree() function seems to be stronger for data inspection, 
+# because it shows more detail about the potential interaction structure in the dataframe.
+# On the other hand, rpart() is much better at anticipating the results of model simplification.
+
+# Comparison with linear regression
 
