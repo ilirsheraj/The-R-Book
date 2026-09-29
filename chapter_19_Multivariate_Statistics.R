@@ -2,6 +2,9 @@ library(scales)
 library(PerformanceAnalytics)
 library(ggplot2)
 library(tidyr)
+library(dplyr)
+library(MASS)
+library(nnet)
 
 plot_dir <- "Plots/"
 
@@ -184,9 +187,6 @@ loadings(pg_fact8)
 
 # Lets make it more visible/explicit
 L <- unclass(loadings(pg_fact8))
-library(dplyr)
-library(tidyr)
-library(ggplot2)
 
 # Order variables by the factor they load most strongly on
 main_factor <- apply(abs(L), 1, which.max)
@@ -284,7 +284,7 @@ dev.off()
 
 ################################################################################
 # Discriminant Analysis
-library(MASS)
+# library(MASS)
 
 table(taxa$Taxon)
 
@@ -338,7 +338,7 @@ lda_cm
 
 ################################################################################
 # Neural Networks
-library(nnet)
+# library(nnet)
 # size = number of hidden units
 nn_model <- nnet(Taxon ~ ., data = taxa, subset = train, size=4, 
                  decay=1.0e-5, maxit=200)
