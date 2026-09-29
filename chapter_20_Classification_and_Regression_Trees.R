@@ -1,9 +1,11 @@
 # Chapter 20 - Classification and Regression Trees (CARTs)
 library(scales)
 library(tree)
+library(rpart)
 
 plot_dir <- "Plots/"
 
+# Trees overview
 pollute <- read.table("Datasets/Pollute.txt", header = TRUE)
 head(pollute)
 
@@ -49,6 +51,31 @@ dev.off()
 
 ################################################################################
 # Part 2: Regression Trees
+## Comparison between tree(), rpart() and linear regression: lm()
+## refit model 1, now being more explicit
+pollute_mod1 <- tree(Pollution ~ ., data = pollute)
+summary(pollute_mod1)
+print(pollute_mod1)
+# terminal nodes designated with *
+# deviance is the penultimate number: gets smaller with further splits
 
+# use a better library: rpart
+# library(rpart)
+pollute_mod3 <- rpart(Pollution ~ ., data = pollute)
 
+# This gives lots of information in summary
+summary(pollute_mod3)
+
+pdf(paste0(plot_dir, "Pollution_Tree_rpart.pdf"), width = 6, height = 4)
+plot(pollute_mod3, margin = 0.1)
+text(pollute_mod3, use.n = TRUE, cex = 0.9)
+dev.off()
+
+temp_big <- factor(pollute$Temp >= 56.25)
+ind_small <- factor(pollute$Industry < 597)
+pollute_mod4 <- lm(pollute$Pollution ~ temp_big * ind_small)
+summary(pollute_mod4)
+
+pollute_mod5 <- lm(pollute$Pollution ~ temp_big * ind_small + pollute$Population)
+summary(pollute_mod5)
 
