@@ -283,4 +283,67 @@ plot(hclust(dist(taxa[,-1])), main = "", xlab = "", ylab = "", axes = FALSE,
 dev.off()
 
 ################################################################################
-# Linear Discriminant Analysis
+# Discriminant Analysis
+library(MASS)
+
+table(taxa$Taxon)
+
+lda_model <- lda(Taxon ~ ., data = taxa)
+# Summary gives not much important stuff
+summary(lda_model)
+
+# Get the entire output here
+lda_model
+
+# 4 taxa classes -> 4 colors: This is ugly AF
+plot(lda_model, col=rep(hue_pal()(4), each=30))
+
+# Make nice PCA-Style plot using ggplot
+## Extract the LD scores by predicting on the original data
+lda_pred <- predict(lda_model, taxa)
+plot_data <- data.frame(Taxon = taxa$Taxon,
+                        LD1 = lda_pred$x[, 1],
+                        LD2 = lda_pred$x[, 2])
+
+head(plot_data)
+
+pdf(paste0(plot_dir, "taxa_LDA_plot.pdf"), width = 6, height = 4)
+ggplot(plot_data, aes(x = LD1, y = LD2, color = Taxon, fill = Taxon)) +
+  geom_point(size = 2.5, alpha = 0.8) +
+  # Add 95% confidence zones
+  stat_ellipse(geom = "polygon", alpha = 0.1, level = 0.95) +
+  scale_color_manual(values = hue_pal()(4)) +
+  scale_fill_manual(values = hue_pal()(4)) +
+  theme_classic() +
+  labs(title = "LDA Separation",
+       x = "LD1 (72.7%)",
+       y = "LD2 (14.2%)") +
+  theme(legend.position = "right",
+        plot.title = element_text(face = "bold"))
+dev.off()
+
+# Train a model on half of the data and then use the other half for testing
+train <- sort(sample(1:120, 60))
+table(taxa$Taxon[train])
+
+lda_mode2 <- lda(Taxon ~., data = taxa, subset = train)
+test <- taxa[-train,]
+not_train <- predict(lda_mode2, test)
+not_train$class
+
+lda_cm <- table(taxa$Taxon[-train], not_train$class)
+lda_cm
+
+# Nice separation
+
+################################################################################
+# Neural Networks
+library(nnet)
+# size = number of hidden units
+nn_model <- nnet(Taxon ~ ., data = taxa, subset = train, size=4, 
+                 decay=1.0e-5, maxit=200)
+
+nn_cm <- table(taxa$Taxon[-train], predict(nn_model, test, type = "class"))
+nn_cm
+
+# EOF
