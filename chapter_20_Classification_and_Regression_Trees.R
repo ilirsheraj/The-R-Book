@@ -177,6 +177,36 @@ plot(epi_mod1)
 text(epi_mod1, cex = 0.9)
 dev.off()
 
-# Classification Trees for replicated data
+# Classification Trees for replicated data: back to taxonomy
+taxonomy <- read.table("Datasets/taxonomy.txt", header = TRUE, 
+                       colClasses = list(Taxon = "factor"))
+head(taxonomy)
 
+# Now use regression trees
+tax_mod1 <- tree(Taxon ~ ., data = taxonomy)
 
+pdf(paste0(plot_dir, "Taxonomy_Class_Tree.pdf"), width = 6, height = 4)
+plot(tax_mod1)
+text(tax_mod1)
+dev.off()
+
+print(tax_mod1)
+
+# Summary of the model
+summary(tax_mod1)
+# Only three variables chosen, the rest were ignored: "Sepal", "Leaf", "Petiole"
+
+# partition.tree() used only when there are no more than 2 explanatory variables
+tax_mod2 <- tree(Taxon ~ Sepal + Leaf, data = taxonomy)
+
+pdf(paste0(plot_dir, "Taxonomy_Partition_Tree.pdf"), width = 6, height = 5)
+partition.tree(tax_mod2)
+tax_label <- ifelse(taxonomy$Taxon == "I", "i", 
+                    ifelse(taxonomy$Taxon == "II","ii",
+                           ifelse(taxonomy$Taxon == "III","iii","iv")))
+text(taxonomy$Sepal, taxonomy$Leaf, label = tax_label,
+     col = hue_pal()(4)[as.numeric(factor(tax_label))])
+dev.off()
+
+################################################################################
+# Part 4: Looking for Patterns
