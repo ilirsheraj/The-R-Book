@@ -2,6 +2,7 @@
 library(scales)
 library(tree)
 library(rpart)
+library(lattice)
 
 plot_dir <- "Plots/"
 
@@ -210,3 +211,40 @@ dev.off()
 
 ################################################################################
 # Part 4: Looking for Patterns
+# Here we use ethanol dataset from lattice
+# library(lattice)
+data("ethanol")
+head(ethanol)
+
+# NOx: Concentration of nitrogen oxides (NO and NO2) in micrograms/J.
+# C: Compression ratio of the engine.
+# E: Equivalence ratio–a measure of the richness of the air and ethanol fuel mixture.
+## We will check the dependence of NOx and E
+
+# Write a function: Modify the original so no need to attach
+plot_tree <- function(x, y, xlab = get_name(substitute(x)),
+                      ylab = get_name(substitute(y))) {
+  plot(x, y, col = hue_pal()(2)[1], xlab = xlab, ylab = ylab, pch = 16)
+  
+  # fit a tree model with a single covariate
+  tree_mod <- tree(y ~ x)
+  x_grid <- seq(min(x), max(x), length.out = 1000)
+  y_tree <- predict(tree_mod, list(x = x_grid))
+  lines(x_grid, y_tree, col = hue_pal()(2)[2], lwd = 2)
+}
+
+# Get "E" from ethanol$E or from ethanol$E[ethanol$E < 1.007]
+get_name <- function(expr) {
+  if (is.call(expr) && identical(expr[[1]], as.name("["))) expr <- expr[[2]]
+  if (is.call(expr) && identical(expr[[1]], as.name("$"))) expr <- expr[[3]]
+  deparse(expr)
+}
+
+pdf(paste0(plot_dir, "Ethanol_Tree.pdf"), width = 8, height = 5)
+par(mfrow=c(1,3))
+plot_tree(ethanol$E, ethanol$NOx)
+plot_tree(ethanol$E[ethanol$E < 1.007], ethanol$NOx[ethanol$E < 1.007])
+plot_tree(ethanol$E[ethanol$E < 1.006], ethanol$NOx[ethanol$E < 1.006])
+dev.off()
+
+# EOF
