@@ -87,4 +87,78 @@ summary(pollute_mod5)
 # On the other hand, rpart() is much better at anticipating the results of model simplification.
 
 # Comparison with linear regression
+data("car.test.frame")
+head(car.test.frame)
+
+# Fit a tree for single covariate
+car_mod1 <- tree(Mileage ~ Weight, data = car.test.frame)
+
+pdf(paste0(plot_dir, "Car_models_tree.pdf"), width = 6, height = 4)
+plot(car_mod1)
+text(car_mod1)
+dev.off()
+
+print(car_mod1)
+
+# first split: low weight
+weight_low <- mean(car.test.frame$Mileage[car.test.frame$Weight < 2567.5])
+# first split, high weight
+weight_high <- mean(car.test.frame$Mileage[car.test.frame$Weight >= 2567.5])
+
+# We can see in scatter
+pdf(paste0(plot_dir, "Car_models_tree_scatter.pdf"), width = 6, height = 4)
+plot(car.test.frame$Weight, 
+     car.test.frame$Mileage, 
+     xlab = "Weight",
+     ylab = "Mileage", 
+     col = hue_pal()(3)[1], 
+     pch=16)
+abline(v = 2567.5, lty = 2, col = hue_pal()(3)[2])
+lines(c(1500, 2567.5), rep(weight_low, 2), col = hue_pal()(3)[3])
+lines(c(2567.5, 4000), rep(weight_high, 2), col = hue_pal()(3)[3])
+dev.off()
+
+# We can also see the full regression tre eon the plot by using predict
+wt <-seq(1500, 4000)
+ml <- predict(car_mod1, list(Weight = wt))
+car_lm <- lm(Mileage ~ Weight, data = car.test.frame)
+
+# Plot it
+pdf(paste0(plot_dir, "Car_models_full_tree_scatter.pdf"), width = 6, height = 4)
+plot(car.test.frame$Weight, 
+     car.test.frame$Mileage, 
+     xlab = "Weight",
+     ylab = "Mileage", 
+     col = hue_pal()(3)[1], 
+     pch=16)
+lines(wt, ml, col = hue_pal()(3)[3], lwd=2)
+abline(a = coef(car_lm)[1], b = coef(car_lm)[2], col = hue_pal()(3)[2], lwd=2)
+dev.off()
+
+# Model Simplification: Pruning
+prune.tree(pollute_mod1)
+
+# Element by element
+prune.tree(pollute_mod1)$size
+
+# dev is Deviance: decreases with increasing number of nodes (complexity)
+prune.tree(pollute_mod1)$dev
+
+# Cost-complexity pruning parameter
+prune.tree(pollute_mod1)$k
+
+# We can plot it
+plot(prune.tree(pollute_mod1), col=hue_pal()(1)[1], lwd=2)
+
+# Explicitly specify the number of nodes (in this case 4)
+pollute_mod6 <- prune.tree(pollute_mod1, best = 4)
+
+pdf(paste0(plot_dir, "Pollution_prunned_tree.pdf"), width = 6, height = 4)
+plot(pollute_mod6)
+text(pollute_mod6)
+dev.off()
+
+################################################################################
+# Part 3: Classification Trees
+
 
