@@ -160,5 +160,23 @@ dev.off()
 
 ################################################################################
 # Part 3: Classification Trees
+epilobium <- read.table("Datasets/epilobium.txt", header = TRUE, 
+                        colClasses = rep("factor", 9))
+
+# 9 species with 8 covariates
+epilobium
+
+# Split until 2 items left in a set, not the default 6
+# mindev: minimal deviance
+epi_mod1 <- tree(species ~ ., mindev = 10e-6, minsize = 2, data = epilobium)
+summary(epi_mod1)
+print(epi_mod1)
+
+pdf(paste0(plot_dir, "Taxonomy_Classification_Tree.pdf"), width = 8, height = 6)
+plot(epi_mod1)
+text(epi_mod1, cex = 0.9)
+dev.off()
+
+# Classification Trees for replicated data
 
 
