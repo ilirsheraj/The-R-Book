@@ -159,7 +159,55 @@ dev.off()
 # Point process models can be built which take the marks into account
 ppm(ragwort, ~ marks)
 
+################################################################################
+# Geospatial Statistics
 
+# The following example is a geographic-scale trial to compare the yields of 56 
+# different varieties of wheat.
+wheat <- read.table("Datasets/wheat.txt", header = TRUE)
+head(wheat)
+table(wheat$Block)
+table(wheat$variety)
+
+# Convert it to geoR object
+wheat_geo <- as.geodata(wheat, coords.col = 5:4, data.col = 3)
+wheat_geo
+
+pdf(paste0(plot_dir, "Wheat_Geodata.pdf"), width = 6, height = 6)
+plot(wheat_geo)
+dev.off()
+
+pdf(paste0(plot_dir, "Wheat_Geodata_Loess.pdf"), width = 6, height = 6)
+plot(wheat_geo, trend = '2nd', lowess = T)
+dev.off()
+
+# Variagoram
+wheat_var <- variog(wheat_geo, trend = "2nd", max.dist = 20)
+plot(wheat_var, main = "", 
+     xlab = "distance (h)", ylab = "variogram", col = "red", pch = 19)
+
+nug <- 18
+sill <- 28
+partial_sill <- sill - nug
+range <- 13
+plot (wheat_var, main = "", cex.lab = 1.5,
+      xlab = "distance (h)", ylab = "variogram", col = "red", pch = 19)
+exp_est <- variofit (wheat_var, cov.model = "exp",
+                     ini.cov.pars = c (partial_sill, range), nugget = nug)
+sph_est <- variofit (wheat_var, cov.model = "sph",
+                     ini.cov.pars = c (partial_sill, range), nugget = nug)
+lines (exp_est, col = "brown", lty = 3, lwd = 2)
+lines (sph_est, col = "blue", lty = 3, lwd = 2)
+legend (10, 10, legend = c ("exponential", "spherical"), lty = c (2, 3),
+        lwd = rep (2, 2), bty = "n", cex = 1.5, col = c ("blue", "brown"))
+
+
+plot(wheat$longitude, wheat$latitude, xlab = "", ylab = "", col = "blue",
+     pch = 20, cex = wheat$yield / 10)
+pred_pts <- matrix (c (4, 22, 13, 23, 42, 33, 12, 6), ncol = 2)
+krige_pts <- krige.conv (wheat_geo, loc = pred_pts,
+                         krige = krige.control (obj.m = exp_est))
+points (pred_pts, col = "red", pch = 20, cex = krige_pts$predict / 10)
 
 
 
