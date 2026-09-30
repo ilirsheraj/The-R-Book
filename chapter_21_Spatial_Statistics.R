@@ -208,13 +208,20 @@ legend(5, 8, legend = c("exponential", "spherical"), lty = c (2, 3),
 dev.off()
 
 
+# Estimate values at any point in the area we are considering
+pdf(paste0(plot_dir, "Wheat_Circle_Predictions.pdf"), width = 6, height = 4)
+plot(wheat$longitude, 
+     wheat$latitude, 
+     xlab = "", 
+     ylab = "", 
+     col = "blue",
+     pch = 20, 
+     cex = wheat$yield / 10)
 
-plot(wheat$longitude, wheat$latitude, xlab = "", ylab = "", col = "blue",
-     pch = 20, cex = wheat$yield / 10)
-pred_pts <- matrix (c (4, 22, 13, 23, 42, 33, 12, 6), ncol = 2)
-krige_pts <- krige.conv (wheat_geo, loc = pred_pts,
-                         krige = krige.control (obj.m = exp_est))
-points (pred_pts, col = "red", pch = 20, cex = krige_pts$predict / 10)
+pred_pts <- matrix(c(4, 22, 13, 23, 42, 33, 12, 6), ncol = 2)
+krige_pts <- krige.conv(wheat_geo, loc = pred_pts,
+                        krige = krige.control(obj.m = exp_est))
+points(pred_pts, col = "red", pch = 20, cex = krige_pts$predict / 10)
+dev.off()
 
-
-
+# EOF
