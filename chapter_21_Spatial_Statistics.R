@@ -82,3 +82,20 @@ anova(ponderosa_model1, ponderosa_model10)
 
 # More explicit
 anova(ponderosa_model10, ponderosa_model1, test = "Chisq")
+
+
+# Fit a quadratic Model
+ponderosa_model2 <- ppm(ponderosa, ~polynom(x, 2))
+ponderosa_model2
+
+# Compare model 1 and 2
+anova(ponderosa_model1, ponderosa_model2, test = "Chisq")
+# No significant difference: keep simple one
+
+# Are the x-coordinates of the trees distributed the way my null model says they should be?
+# Take the covariate at each data point.
+# Work out what distribution those values should have under the null model.
+# Compare observed to expected with KS.
+cdf.test(ponderosa_model1, covariate = "x", test = "ks")
+# H0: the trees' x-coordinates follow the distribution predicted by ponderosa_model1, 
+# meaning intensity exp(β₀ + β₁x).-> Fail to reject it
