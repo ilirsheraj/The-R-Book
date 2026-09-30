@@ -68,3 +68,10 @@ pdf(paste0(plot_dir, "Ponderosa_Intensity_Heatmap.pdf"), width = 6, height = 5)
 plot(density(ponderosa), main = "")
 dev.off()
 
+# along the x-axis
+ponderosa_model1 <- ppm(ponderosa, ~x)
+ponderosa_model1
+
+# Poisson without a covariate
+ponderosa_model10 <- ppm(ponderosa)
+ponderosa_model10
