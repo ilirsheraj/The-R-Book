@@ -99,3 +99,67 @@ anova(ponderosa_model1, ponderosa_model2, test = "Chisq")
 cdf.test(ponderosa_model1, covariate = "x", test = "ks")
 # H0: the trees' x-coordinates follow the distribution predicted by ponderosa_model1, 
 # meaning intensity exp(β₀ + β₁x).-> Fail to reject it
+
+# Check residuals
+pdf(paste0(plot_dir, "Ponderosa_Residuals.pdf"), width = 7, height = 7)
+diagnose.ppm(ponderosa_model1, main = "")
+dev.off()
+
+# Strauss Model: regularity up to 6 meters (r = 6)
+ponderosa_model3 <- ppm(ponderosa, ~x, interaction = Strauss(r = 6))
+ponderosa_model3
+# Interaction Parameter (gamma): 0.5990555
+# gamma < 1: regularity
+# gamma > 1: Clustering
+# gamma ~ 1: Neither
+
+# Check the fitness of model 3
+pdf(paste0(plot_dir, "Ponderosa_GRes.pdf"), width = 6, height = 4)
+plot(Gres(ponderosa_model3), main="", legend = FALSE)
+dev.off()
+
+pdf(paste0(plot_dir, "Ponderosa_Kres.pdf"), width = 6, height = 4)
+plot(Kres(ponderosa_model3), xlim = c(0,14), main="", legend = FALSE)
+dev.off()
+
+# Marks
+ragwort_data <- read.table("Datasets/ragwortmap2.txt", header = T,
+                           colClasses = c (type = "factor"))
+head(ragwort_data)
+
+# Convert to ppp object
+ragwort <- ppp(x = ragwort_data$x, 
+               y = ragwort_data$y,
+               xrange = c(0, 3000),
+               yrange = c(0, 1500), 
+               marks = ragwort_data$type)
+ragwort
+
+summary(ragwort)
+
+pdf(paste0(plot_dir, "Ragwort_Marks.pdf"), width = 6, height = 4)
+plot(ragwort, main = "", cols = hue_pal()(4), pch = 15:18)
+dev.off()
+
+# Plot Each Species into Separate Heatmaps
+pdf(paste0(plot_dir, "Ragwort_Heatmaps.pdf"), width = 6, height = 6)
+plot(density(split(ragwort)), main = "")
+dev.off()
+
+# Plot of the relative frequency: zlim standardizes the plots
+pdf(paste0(plot_dir, "Ragwort_Normalized_Heatmaps.pdf"), width = 6, height = 6)
+plot(relrisk(ragwort), zlim=c(0,1), main="")
+dev.off()
+
+# Distance plots for the pair of species
+pdf(paste0(plot_dir, "Ragwort_Distance_Plots.pdf"), width = 6, height = 6)
+plot(alltypes(ragwort, "G"), title="")
+dev.off()
+
+# Point process models can be built which take the marks into account
+ppm(ragwort, ~ marks)
+
+
+
+
+
