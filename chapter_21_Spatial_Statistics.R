@@ -68,10 +68,17 @@ pdf(paste0(plot_dir, "Ponderosa_Intensity_Heatmap.pdf"), width = 6, height = 5)
 plot(density(ponderosa), main = "")
 dev.off()
 
-# along the x-axis
+# Model the intensity: lambda = e^(b0 + b1X)
+# along the x-axis: similar to lm() model
 ponderosa_model1 <- ppm(ponderosa, ~x)
 ponderosa_model1
 
 # Poisson without a covariate
 ponderosa_model10 <- ppm(ponderosa)
 ponderosa_model10
+
+# Compare both models to see if there is significant improvement
+anova(ponderosa_model1, ponderosa_model10)
+
+# More explicit
+anova(ponderosa_model10, ponderosa_model1, test = "Chisq")
