@@ -181,25 +181,32 @@ pdf(paste0(plot_dir, "Wheat_Geodata_Loess.pdf"), width = 6, height = 6)
 plot(wheat_geo, trend = '2nd', lowess = T)
 dev.off()
 
-# Variagoram
+# Variogram: plot of distance against variability between points at that distance apart.
 wheat_var <- variog(wheat_geo, trend = "2nd", max.dist = 20)
-plot(wheat_var, main = "", 
-     xlab = "distance (h)", ylab = "variogram", col = "red", pch = 19)
 
 nug <- 18
 sill <- 28
 partial_sill <- sill - nug
 range <- 13
-plot (wheat_var, main = "", cex.lab = 1.5,
-      xlab = "distance (h)", ylab = "variogram", col = "red", pch = 19)
-exp_est <- variofit (wheat_var, cov.model = "exp",
-                     ini.cov.pars = c (partial_sill, range), nugget = nug)
-sph_est <- variofit (wheat_var, cov.model = "sph",
-                     ini.cov.pars = c (partial_sill, range), nugget = nug)
-lines (exp_est, col = "brown", lty = 3, lwd = 2)
-lines (sph_est, col = "blue", lty = 3, lwd = 2)
-legend (10, 10, legend = c ("exponential", "spherical"), lty = c (2, 3),
-        lwd = rep (2, 2), bty = "n", cex = 1.5, col = c ("blue", "brown"))
+exp_est <- variofit(wheat_var, cov.model = "exp", 
+                    ini.cov.pars = c(partial_sill, range), nugget = nug)
+sph_est <- variofit(wheat_var, cov.model = "sph",
+                    ini.cov.pars = c (partial_sill, range), nugget = nug)
+
+pdf(paste0(plot_dir, "Wheat_Variograms.pdf"), width = 8, height = 4)
+par(mfrow=c(1,2))
+plot(wheat_var, main = "", 
+     xlab = "distance (h)", ylab = "variogram", col = "red", pch = 19)
+
+plot(wheat_var, main = "", cex.lab = 1.5, xlab = "distance (h)", 
+     ylab = "variogram", col = "red", pch = 19)
+
+lines(exp_est, col = "brown", lty = 3, lwd = 2)
+lines(sph_est, col = "blue", lty = 3, lwd = 2)
+legend(5, 8, legend = c("exponential", "spherical"), lty = c (2, 3),
+       lwd = rep(2, 2), bty = "n", cex = 1, col = c("blue", "brown"))
+dev.off()
+
 
 
 plot(wheat$longitude, wheat$latitude, xlab = "", ylab = "", col = "blue",
