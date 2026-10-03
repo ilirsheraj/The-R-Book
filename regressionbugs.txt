@@ -1,0 +1,11 @@
+model {
+    for (i in 1:9) {
+        growth[i] ~ dnorm(mu[i], tau)
+        mu[i] <- a + b * tannin[i]
+    }
+
+    a ~ dnorm(0.0, 1.0E-4)
+    b ~ dnorm(0.0, 1.0E-4)
+    tau ~ dgamma(1.0E-3, 1.0E-3)
+    sigma <- 1/sqrt(tau)
+}
