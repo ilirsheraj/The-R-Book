@@ -43,3 +43,8 @@ growth_mod1_mcmc <- as.mcmc(
 pdf(paste0(plot_dir, "Bayesian_Posterior_Plot.pdf"), width = 6, height = 4)
 densityplot(growth_mod1_mcmc)
 dev.off()
+
+################################################################################
+# Markov-Chain MonteCarlo (MCMC) for Longitudinal Data
+fertelizer_data <- read.table("Datasets/fertilizer.txt", header = TRUE)
+head(fertelizer_data)

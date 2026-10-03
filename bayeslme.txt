@@ -1,0 +1,19 @@
+model {
+    for (i in 1:12) {
+        for (j in 1:5) {
+            root[i,j] ~ dnorm(mu[i,j], tau)
+            mu[i,j] <- alpha[i] + beta[i] * week[j] + gamma[i] * fertilizer[i]
+        }
+        alpha[i] ~ dnorm(alpha.mu, alpha.tau)
+        beta[i] ~ dnorm(beta.mu, beta.tau)
+        gamma[i] ~ dnorm(gamma.mu, gamma.tau)
+    }
+    tau ~ dgamma(0.001, 0.001)
+    alpha.mu ~ dnorm(0, 0.001)
+    beta.mu ~ dnorm(0, 0.001)
+    gamma.mu ~ dnorm(0, 0.001)
+    alpha.tau ~ dgamma(0.001, 0.001)
+    beta.tau ~ dgamma(0.001, 0.001)
+    gamma.tau ~ dgamma(0.001, 0.001)
+    sigma <- 1 / sqrt(tau)
+}
