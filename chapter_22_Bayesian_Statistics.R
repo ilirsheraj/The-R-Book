@@ -46,5 +46,50 @@ dev.off()
 
 ################################################################################
 # Markov-Chain MonteCarlo (MCMC) for Longitudinal Data
-fertelizer_data <- read.table("Datasets/fertilizer.txt", header = TRUE)
-head(fertelizer_data)
+fertilizer_data <- read.table("Datasets/fertilizer.txt", header = TRUE)
+head(fertilizer_data)
+
+# Reshape the data for BUGS
+# Convert root into a vector and then into matrix: 12 roots
+root <- fertilizer_data$root
+dim(root) <- c(5, 12)
+root <- t(root)
+root
+
+# 10 weeks, every other, so 5 week measurements
+week <- c(1:5)
+fertilizer <- c(rep(1, 6) , rep(0, 6))
+
+fertilizer_data_jags <- list("root", "week", "fertilizer")
+fertilizer_data_jags
+
+# Now Run it
+fert_mod1 <- jags(data = fertilizer_data_jags,
+                  parameters.to.save = c("tau", 
+                                         "alpha.mu", 
+                                         "alpha.tau",
+                                         "beta.mu", 
+                                         "beta.tau", 
+                                         "gamma.mu", 
+                                         "gamma.tau", 
+                                         "sigma"),
+                  model.file = "bayeslme.txt", 
+                  n.chains = 3, 
+                  n.iter = 100000,
+                  n.burnin = 10000, 
+                  n.thin = 1)
+fert_mod1
+
+col_trace <- hue_pal()(3)
+pdf(paste0(plot_dir, "Bayesian_Fertilizer_Model.pdf"), width = 8, height = 12)
+traceplot(fert_mod1, 
+          ask = FALSE,
+          varname = c("tau", "alpha.mu", "alpha.tau", "beta.mu", 
+                      "beta.tau", "gamma.mu", "gamma.tau"),
+           mfrow = c(4,2), col = col_trace)
+dev.off()
+
+################################################################################
+# MCMC for a model with Binomial Errors
+
+
