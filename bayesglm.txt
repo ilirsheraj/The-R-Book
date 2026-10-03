@@ -1,0 +1,13 @@
+model {
+    for (i in 1:21) {
+        count[i] ~ dbin(p[i], sample[i])
+        b[i] ~ dnorm(0, tau)
+        logit(p[i]) <- alpha0 + alpha1 * Orobanche[i] + alpha2 * extract[i] + alpha12 * Orobanche[i] * extract[i] + b[i]
+    }
+    alpha0 ~ dnorm(0, 1.0E-6)
+    alpha1 ~ dnorm(0, 1.0E-6)
+    alpha2 ~ dnorm(0, 1.0E-6)
+    alpha12 ~ dnorm(0, 1.0E-6)
+    tau ~ dgamma(0.001, 0.001)
+    sigma <- 1 / sqrt(tau)
+}

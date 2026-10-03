@@ -91,5 +91,44 @@ dev.off()
 
 ################################################################################
 # MCMC for a model with Binomial Errors
+germ_data <- read.table("Datasets/germination.txt", header = TRUE)
+head(germ_data)
 
+table(germ_data$Orobanche)
+table(germ_data$extract)
 
+# Data provided to the model
+germ_data_jags <- list(
+  count = germ_data$count,
+  sample = germ_data$sample,
+  # 1 = a75, 0 = a73
+  Orobanche = as.numeric(germ_data$Orobanche == "a75"), 
+  # 1 = cucumber, 0 = bean
+  extract  = as.numeric(germ_data$extract == "cucumber")
+)
+
+germ_mod1 <- jags(data = germ_data_jags,
+                  parameters.to.save = c("alpha0", 
+                                         "alpha1", 
+                                         "alpha2",
+                                         "alpha12",
+                                         "tau"),
+                  model.file = "bayesglm.txt", 
+                  n.chains = 3, 
+                  n.iter = 10000, 
+                  n.burnin = 3000, 
+                  n.thin = 1)
+
+germ_mod1
+
+# Plot Traceplots
+col_trace <- hue_pal()(3)
+pdf(paste0(plot_dir, "Bayesian_Germination_Model.pdf"), width = 8, height = 12)
+traceplot(germ_mod1, 
+          ask=FALSE,
+          varname = c("alpha0", "alpha1", "alpha2", "alpha12", "tau"),
+          mfrow = c(3,2), 
+          col = col_trace)
+dev.off()
+
+# EOF
