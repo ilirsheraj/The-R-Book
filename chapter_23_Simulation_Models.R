@@ -200,8 +200,50 @@ box(col = "black")
 dev.off()
 
 # Dynamic Interactions: Species and Parasite
+# dynamics of the host (r) and the parasite (a) 
+r <- 0.4
+a <- 0.1
+# and the migration rates of the host (Hmr) and parasite (Pmr).
+Hmr <- 0.1
+Pmr <- 0.9
 
+# Set up the matrices of host and parasite
+N <- matrix(rep(0, 10000), nrow = 100)
+P <- matrix(rep(0, 10000), nrow = 100)
 
+# Seed with 200 hosts and 100 parasites
+N[33,33] <- 200
+P[33,33] <- 100
+
+# Nicholson-Bailey Model
+host <- function(N, P) {
+  N * exp(r - a * P)
+}
+
+parasite <- function(N, P) {
+  N * (1 - exp (- a * P))
+}
+
+# Define margins
+margins <- function (N) {
+  edges <- matrix (rep (0, 10404), nrow = 102)
+  edges[2:101, 2:101] <- N
+  edges[1, 2:101] <- N[100,]
+  edges[102, 2:101] <- N[1,]
+  edges[2:101, 1] <- N[,100]
+  edges[2:101, 102] <- N[,1]
+  edges[1, 1] <- N[100, 100]
+  edges[102, 102] <- N[1, 1]
+  edges[1, 102] <- N[100, 1]
+  edges[102, 1] <- N[1, 100]
+  edges
+}
+
+nhood <- function (X, i, j) {
+  sum (X[(i - 1):(i + 1), (j - 1):(j + 1)])
+}
+
+# Calculate the number of migrants arriving 
 migration <- function (edges) {
   migs <- matrix(rep(0, 10000), nrow = 100)
   for (a in 2:101) {
@@ -212,6 +254,22 @@ migration <- function (edges) {
   migs
 }
 
+# Run a simulation for 600 generations
+for (t in 1:600) {
+  he <- margins(N)
+  pe <- margins(P)
+  Hmigs <- migration(he)
+  Pmigs <- migration(pe)
+  N <- N - Hmr * N + Hmr * Hmigs / 9
+  P <- P - Pmr * P + Pmr * Pmigs / 9
+  Ni <- host(N,P)
+  P <- parasite(N,P)
+  N <- Ni
+}
 
+pdf(paste0(plot_dir, "Host_Parasite_600_Gens.pdf"), width = 6, height = 6)
+image(1:100, 1:100, N)
+box(col = "black")
+dev.off()
 
 
