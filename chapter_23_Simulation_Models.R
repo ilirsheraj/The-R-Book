@@ -105,3 +105,113 @@ dev.off()
 
 # Proportion of occupancy: ~ 0.3
 sum(N)/length(N)
+
+# Co-Existence Model: Set-up
+pdf(paste0(plot_dir, "Co_existence_setup.pdf"), width = 6, height = 6)
+plot(c(0, 1), c(0, 1),
+     xaxt = "n", 
+     yaxt = "n",
+     type = "n", 
+     xlab = "", 
+     ylab = "")
+
+abline(v = c(1 / 3, 2 / 3))
+abline(h = c(1 / 3, 2 / 3))
+text(x = rep(c(1 / 6, 3 / 6, 5 / 6), 3)[-5],
+     y = rep(c(5 / 6, 3 / 6, 1 / 6), each = 3)[-5],
+     labels = (1:9)[-9])
+text(3 / 6, 3 / 6, "target cell")
+dev.off()
+
+# Set up the margins
+margins <- function (N) {
+  edges <- matrix (rep (0, 10404), nrow = 102)
+  edges[2:101, 2:101] <- N
+  edges[1, 2:101] <- N[100,]
+  edges[102, 2:101] <- N[1,]
+  edges[2:101, 1] <- N[,100]
+  edges[2:101, 102] <- N[,1]
+  edges[1, 1] <- N[100, 100]
+  edges[102, 102] <- N[1, 1]
+  edges[1, 102] <- N[100, 1]
+  edges[102, 1] <- N[1, 100]
+  edges
+}
+
+# Neighborhood function
+nhood <- function (X, i, j) {
+  sum(X[(i - 1):(i + 1), (j - 1):(j + 1)] == 1)
+}
+
+# the reproductive rates of species A and B, 
+RA <- 3
+RB <- 2.0
+# the death (d) and survival (s) rates of adults 
+d <- 0.25
+s <- (1 - d)
+
+# Threshold number (T) of species A
+T <- 6
+
+# Half of universe is A, other half is B
+N <- matrix(c(rep (1, 5000), rep(2, 5000)), nrow = 100)
+image(1:100, 1:100, N)
+box(col = "black")
+
+# Run over 1000 generations
+for (t in 1:1000) {
+  S <- 1 * (matrix (runif(10000), nrow = 100) < s)
+  N <- N * S
+  space <- 10000 - sum (S)
+  nt <- margins(N)
+  tots <- matrix(rep (0, 10000), nrow = 100)
+  for (a in 2:101) {
+    for (b in 2:101) {
+      tots[a - 1, b - 1] <- nhood(nt, a, b)
+    }
+  }
+  seedsA <- sum(N == 1) * RA
+  seedsB <- sum(N == 2) * RB
+  all_seeds <- seedsA + seedsB
+  fA <- seedsA / all_seeds
+  fB <- 1 - fA
+  setA <- ceiling(10000 * fA)
+  placed <- matrix(sample (c(rep (1, setA), rep (2, 10000 - setA))), nrow = 100)
+  for (i in 1:100) {
+    for (j in 1:100) {
+      if (N[i,j] == 0) {
+        if (placed[i,j] == 2) {
+          N[i,j] <- 2
+        } else {
+          if (tots[i,j] >= T) {
+            N[i,j] <- 2
+          } else {
+            N[i,j] <- 1
+          }
+        }
+      }
+    }
+  }
+}
+
+pdf(paste0(plot_dir, "Co_existence_1000_Gens.pdf"), width = 6, height = 6)
+image(1:100, 1:100, N)
+box(col = "black")
+dev.off()
+
+# Dynamic Interactions: Species and Parasite
+
+
+migration <- function (edges) {
+  migs <- matrix(rep(0, 10000), nrow = 100)
+  for (a in 2:101) {
+    for (b in 2:101) {
+      migs[a - 1, b - 1] <- nhood(edges, a, b)
+    }
+  }
+  migs
+}
+
+
+
+
