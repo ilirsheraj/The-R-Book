@@ -65,4 +65,43 @@ for (i in seq (2, 4, 0.01)) {
 }
 dev.off()
 
+################################################################################
+# Spatial Simulation Models
+## Set parameters that will keep the simulation running
+m <- 0.15
+e <- 0.1
+s <- (1 - e)
 
+N <- matrix(rep(0, 10000), nrow = 100)
+xs <- sample(1:100, replace = TRUE)
+ys <- sample(1:100, replace = TRUE)
+
+# Randomly pick 100 patches out of 10000 and populate them
+for (i in 1:100){
+  N[xs[i], ys[i]] <- 1
+}
+
+pdf(paste0(plot_dir, "Meta_population_dynamics.pdf"), width = 6, height = 6)
+image(1:100, 1:100, N)
+box(col = "black")
+dev.off()
+
+# Run a simulation over 1000 generations
+for (t in 1:1000) {
+  S <- matrix(runif(10000), nrow = 100)
+  # If S > s -> die, else survive
+  N <- N * (S < s)
+  # migration
+  im <- floor(sum(N * m))
+  placed <- matrix(sample(c(rep (1, im), rep(0, 10000 - im))), nrow = 100)
+  N <- N + placed
+  N <- apply(N, 2, function(x) ifelse(x > 1, 1, x))
+}
+
+pdf(paste0(plot_dir, "Meta_population_1000_Gens.pdf"), width = 6, height = 6)
+image(1:100, 1:100, N)
+box(col = "black")
+dev.off()
+
+# Proportion of occupancy: ~ 0.3
+sum(N)/length(N)
