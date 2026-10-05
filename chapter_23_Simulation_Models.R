@@ -272,4 +272,28 @@ image(1:100, 1:100, N)
 box(col = "black")
 dev.off()
 
+# Random Walk
+set.seed(42)
+pdf(paste0(plot_dir, "Random_Walk.pdf"), width = 6, height = 6)
+plot(0:100, 0:100, type = "n", xlab = "", ylab = "")
+x <- integer(10001)
+y <- integer(10001)
+x[1] <- 50
+y[1] <- 50
+points(x[1], y[1], col = hue_pal ()(2)[1], pch=16)
 
+for (i in 1:1000000) {
+  # 1 -> +, -1 -> -, 0 stay where you are
+  x[i + 1] <- x[i] + sample(c(1, 0, -1), 1)
+  y[i + 1] <- y[i] + sample(c(1, 0, -1), 1)
+  if (x[i + 1] > 100 | x[i + 1] < 0 | y[i + 1] > 100 | y[i + 1] < 0) {
+    x <- x[1:i]
+    y <- y[1:i]
+    break
+  }
+}
+
+lines(x, y, col = hue_pal()(2)[2])
+dev.off()
+
+# EOF
